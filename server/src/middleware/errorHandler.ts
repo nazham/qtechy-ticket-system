@@ -27,8 +27,14 @@ export const errorHandler = (
   // Log the full error for developers — never expose to client
   console.error(`[ERROR] ${err.message}`, err.stack);
 
-  const statusCode = err instanceof AppError ? err.statusCode : 500;
-  const message = err instanceof AppError ? err.message : "Internal Server Error";
+  let statusCode = err instanceof AppError ? err.statusCode : 500;
+  let message = err instanceof AppError ? err.message : "Internal Server Error";
+
+  // Handle Mongoose/MongoDB CastError (e.g. invalid ObjectId format)
+  if (err.name === "CastError") {
+    statusCode = 400;
+    message = `Invalid ID format for ${(err as any).path || "parameter"}`;
+  }
 
   res.status(statusCode).json({
     success: false,

@@ -22,5 +22,22 @@ export const updateTicketStatusSchema = z.object({
   }),
 });
 
+export const assignTicketSchema = z.object({
+  assignedTo: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, "Invalid assignedTo ID format")
+    .nullable(),
+});
+
+export const addCommentSchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(2, "Message must be at least 2 characters")
+    .max(5000, "Message must not exceed 5000 characters"),
+});
+
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketStatusInput = z.infer<typeof updateTicketStatusSchema>;
+export type AssignTicketInput = z.infer<typeof assignTicketSchema>;
+export type AddCommentInput = z.infer<typeof addCommentSchema>;

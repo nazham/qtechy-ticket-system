@@ -1,8 +1,21 @@
 import { Router } from "express";
-import { createTicket, getTickets } from "../controllers/ticketController";
-import { protect } from "../middleware/authMiddleware";
+import { UserRole } from "../constants/enums";
+import {
+  addComment,
+  assignTicket,
+  createTicket,
+  getTicket,
+  getTickets,
+  updateTicketStatus,
+} from "../controllers/ticketController";
+import { authorizeRoles, protect } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validate";
-import { createTicketSchema } from "../validators/ticketValidators";
+import {
+  addCommentSchema,
+  assignTicketSchema,
+  createTicketSchema,
+  updateTicketStatusSchema,
+} from "../validators/ticketValidators";
 
 const router = Router();
 
@@ -10,5 +23,23 @@ const router = Router();
 router.use(protect);
 
 router.route("/").post(validate(createTicketSchema), createTicket).get(getTickets);
+
+router.get("/:id", getTicket);
+
+router.put(
+  "/:id/assign",
+  authorizeRoles(UserRole.Admin),
+  validate(assignTicketSchema),
+  assignTicket,
+);
+
+router.put(
+  "/:id/status",
+  authorizeRoles(UserRole.Admin, UserRole.Agent),
+  validate(updateTicketStatusSchema),
+  updateTicketStatus,
+);
+
+router.post("/:id/comments", validate(addCommentSchema), addComment);
 
 export default router;
