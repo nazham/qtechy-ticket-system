@@ -20,47 +20,35 @@ export const protect = async (
 ): Promise<void> => {
   let token;
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
       // Extract token from "Bearer <token>"
       token = req.headers.authorization.split(" ")[1];
 
       // Verify token signature
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET as string,
-      ) as JwtPayload;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
       // Fetch user from DB and attach to request (excluding the password)
       const user = await User.findById(decoded.id).select("-password");
 
       if (!user) {
-        res
-          .status(401)
-          .json({
-            success: false,
-            message: "User belonging to this token no longer exists",
-          });
+        res.status(401).json({
+          success: false,
+          message: "User belonging to this token no longer exists",
+        });
         return;
       }
 
       req.user = user;
       next();
     } catch (error) {
-      res
-        .status(401)
-        .json({
-          success: false,
-          message: "Not authorized, token failed or expired",
-        });
+      res.status(401).json({
+        success: false,
+        message: "Not authorized, token failed or expired",
+      });
     }
   } else {
-    res
-      .status(401)
-      .json({ success: false, message: "Not authorized, no token provided" });
+    res.status(401).json({ success: false, message: "Not authorized, no token provided" });
   }
 };
 

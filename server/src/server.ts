@@ -26,7 +26,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 });
 
 // Mount Routes
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
 // Global Error Handler (must be after all routes)
 app.use(errorHandler);
@@ -34,7 +34,5 @@ app.use(errorHandler);
 const PORT: number = parseInt(process.env.PORT as string, 10) || 8080;
 
 app.listen(PORT, () => {
-  console.log(
-    `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`,
-  );
+  console.log(`Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
 });

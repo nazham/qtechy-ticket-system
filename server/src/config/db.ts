@@ -7,6 +7,9 @@ const connectDB = async (): Promise<void> => {
       throw new Error("MONGO_URI is not defined in the environment variables");
     }
 
+    // Strip $ operators from all query filters globally — prevents NoSQL injection at the Mongoose layer regardless of input source. Safer than HTTP-layer sanitization.
+    mongoose.set("sanitizeFilter", true);
+
     const conn = await mongoose.connect(mongoURI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
