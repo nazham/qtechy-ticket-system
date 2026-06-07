@@ -38,7 +38,7 @@ export const loginSchema = z.object({
     .string({
       error: (i) => (i.input === undefined ? "Password is required" : "Password must be a string"),
     })
-    .min(1, "Password is required"),
+    .min(6, "Password must be at least 6 characters"),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
