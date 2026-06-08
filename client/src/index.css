@@ -1,1 +1,91 @@
 @import 'tailwindcss';
+
+/* Premium Custom Styling for React Toastify */
+:root {
+  --toastify-toast-width: 380px;
+  --toastify-toast-min-height: 64px;
+  --toastify-toast-bd-radius: 12px;
+  --toastify-font-family: inherit;
+
+  /* Tailwind CSS matching semantic colors for Toastify SVGs */
+  --toastify-icon-color-success: #10b981; /* emerald-500 */
+  --toastify-icon-color-error: #ef4444; /* red-500 */
+  --toastify-icon-color-warning: #f59e0b; /* amber-500 */
+  --toastify-icon-color-info: #6366f1; /* indigo-500 */
+}
+
+/* Glassmorphism toast container overlay */
+.Toastify__toast {
+  background: rgba(15, 23, 42, 0.8) !important; /* Slate-900 with opacity */
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.5),
+    0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  color: #f8fafc !important;
+  overflow: hidden;
+}
+
+/* Custom side indicator border for semantic alerts */
+.Toastify__toast--success {
+  border-left: 4px solid #10b981 !important;
+}
+
+.Toastify__toast--error {
+  border-left: 4px solid #ef4444 !important;
+}
+
+.Toastify__toast--warning {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.Toastify__toast--info {
+  border-left: 4px solid #6366f1 !important;
+}
+
+/* Toast Body Text adjustments */
+.Toastify__toast-body {
+  font-family: inherit;
+  font-size: 0.875rem; /* text-sm */
+  font-weight: 500;
+  color: #f1f5f9 !important;
+  padding: 6px 4px !important;
+}
+
+/* Close Button overrides */
+.Toastify__close-button {
+  color: #94a3b8 !important;
+  opacity: 0.6;
+  transition:
+    opacity 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+  align-self: center !important;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+  color: #ffffff !important;
+}
+
+/* Progress bar transitions / styling */
+.Toastify__progress-bar {
+  height: 3px !important;
+}
+
+/* Smooth gradients for the progress indicators */
+.Toastify__progress-bar--success {
+  background: linear-gradient(to right, #6366f1, #10b981) !important;
+}
+
+.Toastify__progress-bar--error {
+  background: linear-gradient(to right, #6366f1, #ef4444) !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: linear-gradient(to right, #6366f1, #f59e0b) !important;
+}
+
+.Toastify__progress-bar--info {
+  background: linear-gradient(to right, #6366f1, #4f46e5) !important;
+}

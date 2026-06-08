@@ -74,6 +74,43 @@ export const authApi = apiSlice.injectEndpoints({
       },
     }),
 
+    registerUser: build.mutation<
+      LoginResponse,
+      LoginCredentials & { name: string }
+    >({
+      query: (userData) => ({
+        url: '/auth/register',
+        method: 'POST',
+        body: userData,
+      }),
+      transformResponse: (response: ApiLoginResponse): LoginResponse => {
+        const { _id, name, email, role, token } = response.data;
+        const normalizedRole = role.toLowerCase() as User['role'];
+
+        if (!VALID_ROLES.includes(normalizedRole)) {
+          throw new Error(`Unknown role received: ${role}`);
+        }
+
+        return {
+          user: {
+            id: _id,
+            name,
+            email,
+            role: normalizedRole,
+          },
+          token,
+        };
+      },
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setCredentials(data));
+        } catch {
+          // Handled by the consuming component hook state
+        }
+      },
+    }),
+
     getMe: build.query<User, void>({
       query: () => '/auth/me',
       transformResponse: (response: ApiMeResponse): User => {
@@ -104,4 +141,5 @@ export const authApi = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useLoginMutation, useGetMeQuery } = authApi;
+export const { useLoginMutation, useRegisterUserMutation, useGetMeQuery } =
+  authApi;

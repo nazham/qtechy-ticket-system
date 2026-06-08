@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { logout, selectUser, type User } from '../../store/slices/authSlice';
 
@@ -59,6 +60,7 @@ export default function MainLayout() {
 
   const handleLogout = () => {
     dispatch(logout());
+    toast.info('Logged out successfully.');
     navigate('/login');
   };
 

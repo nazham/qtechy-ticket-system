@@ -1,4 +1,6 @@
 import { RouterProvider } from 'react-router-dom';
+import { ToastContainer, Slide } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useAppSelector } from './store/hooks';
 import { selectToken } from './store/slices/authSlice';
 import { useGetMeQuery } from './store/slices/authApi';
@@ -15,5 +17,22 @@ export default function App() {
   // The hook's onQueryStarted lifecycle will dispatch state updates to authSlice.
   useGetMeQuery(undefined, { skip: !token });
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover
+        theme="dark"
+        transition={Slide}
+      />
+    </>
+  );
 }

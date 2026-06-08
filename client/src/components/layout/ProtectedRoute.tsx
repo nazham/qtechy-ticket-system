@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAppSelector } from '../../store/hooks';
 import {
   selectIsAuthenticated,
@@ -17,6 +19,17 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const user = useAppSelector(selectUser);
   const isInitializing = useAppSelector(selectIsInitializing);
   const location = useLocation();
+
+  const isAuthorized =
+    !allowedRoles || (user && allowedRoles.includes(user.role));
+
+  useEffect(() => {
+    if (isAuthenticated && user && !isAuthorized) {
+      toast.error('Access Denied: You do not have the required permissions.', {
+        toastId: 'access-denied',
+      });
+    }
+  }, [isAuthenticated, user, isAuthorized]);
 
   // Show a loading spinner during initial session rehydration from token
   if (isInitializing) {
@@ -38,7 +51,7 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   }
 
   // ── Gate 2: Authorization ───────────────────────────────────────────────
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (!isAuthorized) {
     return <Navigate to="/unauthorized" replace />;
   }
 

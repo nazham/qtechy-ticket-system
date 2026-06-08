@@ -2,6 +2,7 @@ import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAppSelector } from '../store/hooks';
 import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
 import { useLoginMutation } from '../store/slices/authApi';
@@ -64,8 +65,9 @@ export default function LoginPage() {
 
     try {
       await login({ email: emailTrimmed, password }).unwrap();
-    } catch {
-      // Error is set in apiError state and handled/displayed automatically
+      toast.success('Signed in successfully!');
+    } catch (err) {
+      toast.error(extractApiError(err, 'Login failed'));
     }
   };
 

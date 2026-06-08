@@ -4,6 +4,7 @@ import type {
   FetchArgs,
   FetchBaseQueryError,
 } from '@reduxjs/toolkit/query';
+import { toast } from 'react-toastify';
 import { logout } from './slices/authSlice';
 
 interface StateWithAuth {
@@ -35,6 +36,9 @@ const baseQueryWithReauth: BaseQueryFn<
     const isLoginRequest = url.includes('/auth/login');
 
     if (!isLoginRequest) {
+      toast.error('Session expired. Please sign in again.', {
+        toastId: 'session-expired',
+      });
       api.dispatch(logout());
     }
   }
