@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from './store/hooks';
-import { fetchCurrentUser } from './store/slices/authSlice';
+import { fetchCurrentUser, selectToken } from './store/slices/authSlice';
 import { router } from './routes';
 
 /**
@@ -10,7 +10,7 @@ import { router } from './routes';
  */
 export default function App() {
   const dispatch = useAppDispatch();
-  const token = useAppSelector((state) => state.auth.token);
+  const token = useAppSelector(selectToken);
 
   useEffect(() => {
     if (token) {

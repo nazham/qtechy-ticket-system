@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../store/hooks';
-import type { User } from '../../store/slices/authSlice';
+import { selectIsAuthenticated, selectIsInitializing, selectUser, type User } from '../../store/slices/authSlice';
 
 interface ProtectedRouteProps {
   /** Roles permitted to access this route. If omitted, any authenticated user can access. */
@@ -8,7 +8,9 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, user, isInitializing } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectUser);
+  const isInitializing = useAppSelector(selectIsInitializing);
   const location = useLocation();
 
   // Show a loading spinner during initial session rehydration from token

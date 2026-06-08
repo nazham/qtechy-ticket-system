@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import api from '../../api/axios';
 import { extractApiError } from '../../api/utils';
 
@@ -60,7 +61,7 @@ interface CreateTicketResponse {
  * Includes a `condition` guard to prevent duplicate requests when
  * a fetch is already in progress.
  */
-export const fetchTickets = createAsyncThunk<Ticket[], void>(
+export const fetchTickets = createAsyncThunk<Ticket[], void, { rejectValue: string }>(
   'tickets/fetchTickets',
   async (_, { rejectWithValue }) => {
     try {
@@ -84,7 +85,7 @@ export const fetchTickets = createAsyncThunk<Ticket[], void>(
  * On success the new ticket is prepended to the tickets array so the
  * UI updates immediately without a full refetch.
  */
-export const createTicket = createAsyncThunk<Ticket, CreateTicketPayload>(
+export const createTicket = createAsyncThunk<Ticket, CreateTicketPayload, { rejectValue: string }>(
   'tickets/createTicket',
   async (ticketData, { rejectWithValue }) => {
     try {
@@ -103,7 +104,7 @@ const ticketSlice = createSlice({
   initialState,
   reducers: {
     /** Sets a single ticket for the detail/edit view. */
-    setCurrentTicket(state, action: { payload: Ticket | null }) {
+    setCurrentTicket(state, action: PayloadAction<Ticket | null>) {
       state.currentTicket = action.payload;
     },
 
@@ -125,7 +126,7 @@ const ticketSlice = createSlice({
       })
       .addCase(fetchTickets.rejected, (state, action) => {
         state.fetchStatus = 'failed';
-        state.error = (action.payload as string) ?? 'Failed to fetch tickets';
+        state.error = action.payload ?? 'Failed to fetch tickets';
       })
 
       // ── createTicket ────────────────────────────────────────────────
@@ -140,10 +141,24 @@ const ticketSlice = createSlice({
       })
       .addCase(createTicket.rejected, (state, action) => {
         state.createStatus = 'failed';
-        state.error = (action.payload as string) ?? 'Failed to create ticket';
+        state.error = action.payload ?? 'Failed to create ticket';
       });
+  },
+  selectors: {
+    selectTickets: (state) => state.tickets,
+    selectCurrentTicket: (state) => state.currentTicket,
+    selectFetchStatus: (state) => state.fetchStatus,
+    selectCreateStatus: (state) => state.createStatus,
+    selectTicketError: (state) => state.error,
   },
 });
 
 export const { setCurrentTicket, clearTicketError } = ticketSlice.actions;
+export const {
+  selectTickets,
+  selectCurrentTicket,
+  selectFetchStatus,
+  selectCreateStatus,
+  selectTicketError,
+} = ticketSlice.selectors;
 export default ticketSlice.reducer;

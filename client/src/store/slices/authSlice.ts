@@ -8,6 +8,8 @@ export interface User {
   role: "admin" | "agent" | "user";
 }
 
+export const VALID_ROLES: User["role"][] = ["admin", "agent", "user"];
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -77,7 +79,11 @@ const initialState: AuthState = {
  * Authenticates a user via POST /api/auth/login.
  * On success, persists only the JWT to localStorage.
  */
-export const loginUser = createAsyncThunk<LoginResponse, LoginCredentials>(
+export const loginUser = createAsyncThunk<
+  LoginResponse,
+  LoginCredentials,
+  { rejectValue: string }
+>(
   "auth/loginUser",
   async (credentials, { rejectWithValue }) => {
     try {
@@ -99,7 +105,6 @@ export const loginUser = createAsyncThunk<LoginResponse, LoginCredentials>(
       const { _id, name, email, role, token } = apiData.data;
 
       // Normalize user role (lowercase) and map _id to id
-      const VALID_ROLES: User["role"][] = ["admin", "agent", "user"];
       const normalizedRole = role.toLowerCase() as User["role"];
 
       if (!VALID_ROLES.includes(normalizedRole)) {
@@ -126,7 +131,11 @@ export const loginUser = createAsyncThunk<LoginResponse, LoginCredentials>(
 /**
  * Rehydrates the user profile using the stored token on application startup.
  */
-export const fetchCurrentUser = createAsyncThunk<User, void>(
+export const fetchCurrentUser = createAsyncThunk<
+  User,
+  void,
+  { rejectValue: string }
+>(
   "auth/fetchCurrentUser",
   async (_, { rejectWithValue }) => {
     try {
@@ -139,7 +148,6 @@ export const fetchCurrentUser = createAsyncThunk<User, void>(
 
       const { _id, name, email, role } = apiData.data;
 
-      const VALID_ROLES: User["role"][] = ["admin", "agent", "user"];
       const normalizedRole = role.toLowerCase() as User["role"];
 
       if (!VALID_ROLES.includes(normalizedRole)) {
@@ -153,6 +161,7 @@ export const fetchCurrentUser = createAsyncThunk<User, void>(
         role: normalizedRole,
       };
     } catch (error: unknown) {
+      localStorage.removeItem("token");
       return rejectWithValue(
         extractApiError(error, "Failed to fetch user profile"),
       );
@@ -206,7 +215,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = "failed";
-        state.error = (action.payload as string) ?? "Login failed";
+        state.error = action.payload ?? "Login failed";
         state.isAuthenticated = false;
       })
 
@@ -229,10 +238,25 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        localStorage.removeItem("token");
       });
+  },
+  selectors: {
+    selectUser: (state) => state.user,
+    selectToken: (state) => state.token,
+    selectIsAuthenticated: (state) => state.isAuthenticated,
+    selectIsInitializing: (state) => state.isInitializing,
+    selectAuthStatus: (state) => state.status,
+    selectAuthError: (state) => state.error,
   },
 });
 
 export const { logout, clearAuthError } = authSlice.actions;
+export const {
+  selectUser,
+  selectToken,
+  selectIsAuthenticated,
+  selectIsInitializing,
+  selectAuthStatus,
+  selectAuthError,
+} = authSlice.selectors;
 export default authSlice.reducer;

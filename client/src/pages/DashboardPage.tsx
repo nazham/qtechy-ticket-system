@@ -1,15 +1,16 @@
 import { CheckCircle2, Clock, Ticket, Users } from 'lucide-react';
 import { useAppSelector } from '../store/hooks';
+import { selectUser } from '../store/slices/authSlice';
+
+const STATS_CONFIG = [
+  { label: 'Open Tickets', value: '—', icon: <Ticket size={22} />, color: 'bg-blue-500' },
+  { label: 'In Progress', value: '—', icon: <Clock size={22} />, color: 'bg-amber-500' },
+  { label: 'Resolved', value: '—', icon: <CheckCircle2 size={22} />, color: 'bg-emerald-500' },
+  { label: 'Total Users', value: '—', icon: <Users size={22} />, color: 'bg-indigo-500' },
+];
 
 export default function DashboardPage() {
-  const { user } = useAppSelector((state) => state.auth);
-
-  const stats = [
-    { label: 'Open Tickets', value: '—', icon: <Ticket size={22} />, color: 'bg-blue-500' },
-    { label: 'In Progress', value: '—', icon: <Clock size={22} />, color: 'bg-amber-500' },
-    { label: 'Resolved', value: '—', icon: <CheckCircle2 size={22} />, color: 'bg-emerald-500' },
-    { label: 'Total Users', value: '—', icon: <Users size={22} />, color: 'bg-indigo-500' },
-  ];
+  const user = useAppSelector(selectUser);
 
   return (
     <div>
@@ -30,7 +31,7 @@ export default function DashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {STATS_CONFIG.map((stat) => (
           <div
             key={stat.label}
             className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"

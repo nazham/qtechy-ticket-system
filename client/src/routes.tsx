@@ -10,9 +10,11 @@ import TicketsPage from './pages/TicketsPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import UsersPage from './pages/UsersPage';
 import { useAppSelector } from './store/hooks';
+import { selectIsAuthenticated, selectUser } from './store/slices/authSlice';
 
 function CatchAllRedirect() {
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectUser);
   const location = useLocation();
 
   if (isAuthenticated && user) {

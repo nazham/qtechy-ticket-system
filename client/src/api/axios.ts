@@ -1,5 +1,15 @@
 import axios from "axios";
 
+let store: any;
+
+/**
+ * Injects the Redux store dynamically to avoid circular dependencies
+ * while allowing the interceptor to dispatch actions.
+ */
+export const injectStore = (_store: any) => {
+  store = _store;
+};
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
@@ -29,11 +39,15 @@ api.interceptors.response.use(
   (error) => {
     const isLoginRequest = error.config?.url?.includes("/auth/login");
     if (error.response?.status === 401 && !isLoginRequest) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
+      if (store) {
+        store.dispatch({ type: "auth/logout" });
+      } else {
+        localStorage.removeItem("token");
+      }
     }
     return Promise.reject(error);
   },
 );
 
 export default api;
+

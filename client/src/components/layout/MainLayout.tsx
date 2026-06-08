@@ -11,7 +11,7 @@ import {
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { logout, type User } from '../../store/slices/authSlice';
+import { logout, selectUser, type User } from '../../store/slices/authSlice';
 
 interface NavItem {
   label: string;
@@ -52,7 +52,7 @@ const navItems: NavItem[] = [
 ];
 
 export default function MainLayout() {
-  const { user } = useAppSelector((state) => state.auth);
+  const user = useAppSelector(selectUser);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);

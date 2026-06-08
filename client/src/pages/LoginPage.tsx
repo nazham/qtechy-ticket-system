@@ -1,12 +1,27 @@
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
+import type { Location } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { clearAuthError, loginUser } from '../store/slices/authSlice';
+import {
+  clearAuthError,
+  loginUser,
+  selectAuthError,
+  selectAuthStatus,
+  selectIsAuthenticated,
+  selectUser,
+} from '../store/slices/authSlice';
+
+interface LocationState {
+  from?: Location | string;
+}
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, user, status, error } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const user = useAppSelector(selectUser);
+  const status = useAppSelector(selectAuthStatus);
+  const error = useAppSelector(selectAuthError);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +36,7 @@ export default function LoginPage() {
   }, [dispatch]);
 
   const location = useLocation();
-  const rawFrom = (location.state as any)?.from;
+  const rawFrom = (location.state as LocationState | null)?.from;
   const isFromLogin = rawFrom
     ? (typeof rawFrom === 'string' ? rawFrom === '/login' : rawFrom.pathname === '/login')
     : false;
