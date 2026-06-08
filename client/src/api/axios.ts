@@ -1,12 +1,13 @@
 import axios from 'axios';
+import type { store as reduxStore } from '../store/store';
 
-let store: any;
+let store: typeof reduxStore;
 
 /**
  * Injects the Redux store dynamically to avoid circular dependencies
  * while allowing the interceptor to dispatch actions.
  */
-export const injectStore = (_store: any) => {
+export const injectStore = (_store: typeof reduxStore) => {
   store = _store;
 };
 

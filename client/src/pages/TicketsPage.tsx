@@ -1,8 +1,12 @@
 export default function TicketsPage() {
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold text-gray-900">Tickets</h1>
-      <p className="text-gray-600">View and manage support tickets.</p>
+      <h1 className="mb-4 text-2xl font-bold text-neutral-text-primary">
+        Tickets
+      </h1>
+      <p className="text-neutral-text-secondary">
+        View and manage support tickets.
+      </p>
     </div>
   );
 }

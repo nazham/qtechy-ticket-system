@@ -34,10 +34,10 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   // Show a loading spinner during initial session rehydration from token
   if (isInitializing) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-indigo-900">
+      <div className="flex min-h-screen items-center justify-center bg-dark-base text-dark-text-primary">
         <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-          <p className="mt-3 text-sm font-medium text-indigo-200">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-brand-accent border-t-transparent"></div>
+          <p className="mt-4 text-sm font-medium text-dark-text-secondary">
             Rehydrating session...
           </p>
         </div>

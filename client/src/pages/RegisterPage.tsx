@@ -82,29 +82,31 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-indigo-900 px-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-dark-base px-4">
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute -top-40 left-1/2 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-brand-accent/10 blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
         {/* Card */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="rounded-premium-card border border-dark-border bg-dark-surface/80 p-8 shadow-2xl backdrop-blur-xl">
           {/* Branding */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-500/30">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-accent shadow-lg shadow-brand-accent/20">
               <UserPlus className="text-white" size={26} />
             </div>
-            <h1 className="text-2xl font-bold text-white">Create an account</h1>
-            <p className="mt-1 text-sm text-gray-400">
+            <h1 className="text-2xl font-bold text-dark-text-primary">
+              Create an account
+            </h1>
+            <p className="mt-1.5 text-sm text-dark-text-secondary">
               Get started with QTechy Ticket System
             </p>
           </div>
 
           {/* Error banner */}
           {(localError || apiError) && (
-            <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <div className="mb-6 rounded-lg border border-ui-danger/20 bg-ui-danger/10 px-4 py-3 text-sm text-ui-danger">
               {localError || extractApiError(apiError, 'Registration failed')}
             </div>
           )}
@@ -115,7 +117,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="register-name"
-                className="mb-1.5 block text-sm font-medium text-gray-300"
+                className="mb-1.5 block text-sm font-medium text-dark-text-secondary"
               >
                 Full name
               </label>
@@ -130,7 +132,7 @@ export default function RegisterPage() {
                   if (localError) setLocalError(null);
                 }}
                 disabled={isLoading}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                className="w-full rounded-lg border border-dark-border bg-dark-base/50 px-4 py-2.5 text-sm text-dark-text-primary placeholder-dark-text-muted transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
               />
             </div>
 
@@ -138,7 +140,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="register-email"
-                className="mb-1.5 block text-sm font-medium text-gray-300"
+                className="mb-1.5 block text-sm font-medium text-dark-text-secondary"
               >
                 Email address
               </label>
@@ -153,7 +155,7 @@ export default function RegisterPage() {
                   if (localError) setLocalError(null);
                 }}
                 disabled={isLoading}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                className="w-full rounded-lg border border-dark-border bg-dark-base/50 px-4 py-2.5 text-sm text-dark-text-primary placeholder-dark-text-muted transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
               />
             </div>
 
@@ -161,7 +163,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="register-password"
-                className="mb-1.5 block text-sm font-medium text-gray-300"
+                className="mb-1.5 block text-sm font-medium text-dark-text-secondary"
               >
                 Password
               </label>
@@ -177,12 +179,12 @@ export default function RegisterPage() {
                     if (localError) setLocalError(null);
                   }}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-11 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-dark-border bg-dark-base/50 px-4 py-2.5 pr-11 text-sm text-dark-text-primary placeholder-dark-text-muted transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-200"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-dark-text-secondary transition-colors hover:text-dark-text-primary"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -194,7 +196,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+              className="btn-primary w-full"
             >
               {isLoading ? (
                 <>
@@ -211,11 +213,11 @@ export default function RegisterPage() {
           </form>
 
           {/* Footer link */}
-          <p className="mt-6 text-center text-sm text-gray-400">
+          <p className="mt-6 text-center text-sm text-dark-text-secondary">
             Already have an account?{' '}
             <Link
               to="/login"
-              className="font-medium text-indigo-400 transition-colors hover:text-indigo-300"
+              className="font-medium text-brand-accent transition-colors hover:text-brand-accent-hover"
             >
               Sign in
             </Link>
