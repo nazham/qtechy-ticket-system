@@ -1,44 +1,33 @@
 import { Eye, EyeOff, Loader2, LogIn } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
-import {
-  clearAuthError,
-  loginUser,
-  selectAuthError,
-  selectAuthStatus,
-  selectIsAuthenticated,
-  selectUser,
-} from '../store/slices/authSlice';
+import { useAppSelector } from '../store/hooks';
+import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
+import { useLoginMutation } from '../store/slices/authApi';
+import { extractApiError } from '../api/utils';
 
 interface LocationState {
   from?: Location | string;
 }
 
 export default function LoginPage() {
-  const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
-  const status = useAppSelector(selectAuthStatus);
-  const error = useAppSelector(selectAuthError);
+
+  const [login, { isLoading, error: apiError }] = useLoginMutation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // Clear Redux auth error when navigating away from the login page
-  useEffect(() => {
-    return () => {
-      dispatch(clearAuthError());
-    };
-  }, [dispatch]);
-
   const location = useLocation();
   const rawFrom = (location.state as LocationState | null)?.from;
   const isFromLogin = rawFrom
-    ? (typeof rawFrom === 'string' ? rawFrom === '/login' : rawFrom.pathname === '/login')
+    ? typeof rawFrom === 'string'
+      ? rawFrom === '/login'
+      : rawFrom.pathname === '/login'
     : false;
   const from = rawFrom && !isFromLogin ? rawFrom : '/dashboard';
 
@@ -47,14 +36,11 @@ export default function LoginPage() {
     return <Navigate to={from} replace />;
   }
 
-  const isLoading = status === 'loading';
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
 
     setLocalError(null);
-    dispatch(clearAuthError());
 
     const emailTrimmed = email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,9 +63,9 @@ export default function LoginPage() {
     }
 
     try {
-      await dispatch(loginUser({ email: emailTrimmed, password })).unwrap();
-    } catch (err) {
-      // Error is set in the Redux store state (auth.error) and displayed automatically
+      await login({ email: emailTrimmed, password }).unwrap();
+    } catch {
+      // Error is set in apiError state and handled/displayed automatically
     }
   };
 
@@ -105,9 +91,9 @@ export default function LoginPage() {
           </div>
 
           {/* Error banner */}
-          {(localError || error) && (
+          {(localError || apiError) && (
             <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {localError || error}
+              {localError || extractApiError(apiError, 'Login failed')}
             </div>
           )}
 
@@ -133,7 +119,7 @@ export default function LoginPage() {
                   if (localError) setLocalError(null);
                 }}
                 disabled={isLoading}
-                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
               />
             </div>
 
@@ -158,12 +144,12 @@ export default function LoginPage() {
                     if (localError) setLocalError(null);
                   }}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-11 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-11 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-200"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -175,7 +161,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isLoading ? (
                 <>
@@ -196,7 +182,7 @@ export default function LoginPage() {
             Don&apos;t have an account?{' '}
             <Link
               to="/register"
-              className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="font-medium text-indigo-400 transition-colors hover:text-indigo-300"
             >
               Create one
             </Link>

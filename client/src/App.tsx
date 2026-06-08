@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from './store/hooks';
-import { fetchCurrentUser, selectToken } from './store/slices/authSlice';
+import { useAppSelector } from './store/hooks';
+import { selectToken } from './store/slices/authSlice';
+import { useGetMeQuery } from './store/slices/authApi';
 import { router } from './routes';
 
 /**
@@ -9,14 +9,11 @@ import { router } from './routes';
  * Handles global session rehydration and injects the router provider.
  */
 export default function App() {
-  const dispatch = useAppDispatch();
   const token = useAppSelector(selectToken);
 
-  useEffect(() => {
-    if (token) {
-      dispatch(fetchCurrentUser());
-    }
-  }, [dispatch, token]);
+  // Triggers the session profile request if a token exists.
+  // The hook's onQueryStarted lifecycle will dispatch state updates to authSlice.
+  useGetMeQuery(undefined, { skip: !token });
 
   return <RouterProvider router={router} />;
 }
