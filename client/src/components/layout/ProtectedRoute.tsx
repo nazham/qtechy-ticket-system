@@ -1,6 +1,11 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../store/hooks';
-import { selectIsAuthenticated, selectIsInitializing, selectUser, type User } from '../../store/slices/authSlice';
+import {
+  selectIsAuthenticated,
+  selectIsInitializing,
+  selectUser,
+  type User,
+} from '../../store/slices/authSlice';
 
 interface ProtectedRouteProps {
   /** Roles permitted to access this route. If omitted, any authenticated user can access. */
@@ -19,7 +24,9 @@ export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
       <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-indigo-900">
         <div className="text-center">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-          <p className="mt-3 text-sm font-medium text-indigo-200">Rehydrating session...</p>
+          <p className="mt-3 text-sm font-medium text-indigo-200">
+            Rehydrating session...
+          </p>
         </div>
       </div>
     );

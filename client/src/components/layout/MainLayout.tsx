@@ -79,21 +79,16 @@ export default function MainLayout() {
 
       {/* ── Sidebar ─────────────────────────────────────────────────────── */}
       <aside
-        className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white
-          transform transition-transform duration-200 ease-in-out
-          lg:translate-x-0 lg:static lg:z-auto
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-900 text-white transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} `}
       >
         {/* Brand */}
-        <div className="flex h-16 items-center justify-between px-6 border-b border-gray-700">
+        <div className="flex h-16 items-center justify-between border-b border-gray-700 px-6">
           <h1 className="text-lg font-semibold tracking-tight">
             <span className="text-indigo-400">QTechy</span> Tickets
           </h1>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-white lg:hidden"
             aria-label="Close sidebar"
           >
             <X size={20} />
@@ -108,9 +103,10 @@ export default function MainLayout() {
               to={item.to}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${isActive
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
                 }`
               }
             >
@@ -121,10 +117,10 @@ export default function MainLayout() {
         </nav>
 
         {/* Logout — pinned to bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-700">
+        <div className="absolute right-0 bottom-0 left-0 border-t border-gray-700 p-3">
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-gray-800 hover:text-white"
           >
             <LogOut size={20} />
             Logout
@@ -138,7 +134,7 @@ export default function MainLayout() {
         <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 shadow-sm">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden text-gray-600 hover:text-gray-900"
+            className="text-gray-600 hover:text-gray-900 lg:hidden"
             aria-label="Open sidebar"
           >
             <Menu size={24} />
@@ -149,11 +145,11 @@ export default function MainLayout() {
           {/* User Info */}
           {user && (
             <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
+              <div className="hidden text-right sm:block">
                 <p className="text-sm font-medium text-gray-900">{user.name}</p>
                 <p className="text-xs text-gray-500 capitalize">{user.role}</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-semibold text-sm">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-600">
                 {user.name.charAt(0).toUpperCase()}
               </div>
             </div>

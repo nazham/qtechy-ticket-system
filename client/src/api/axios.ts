@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 let store: any;
 
@@ -13,7 +13,7 @@ export const injectStore = (_store: any) => {
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
@@ -21,15 +21,15 @@ const api = axios.create({
 // Attaches JWT Bearer token to every outgoing request if available.
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token && token !== "undefined") {
-      config.headers.set("Authorization", `Bearer ${token}`);
+    const token = localStorage.getItem('token');
+    if (token && token !== 'undefined') {
+      config.headers.set('Authorization', `Bearer ${token}`);
     }
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
 // ─── Response Interceptor ───────────────────────────────────────────────────
@@ -37,17 +37,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isLoginRequest = error.config?.url?.includes("/auth/login");
+    const isLoginRequest = error.config?.url?.includes('/auth/login');
     if (error.response?.status === 401 && !isLoginRequest) {
       if (store) {
-        store.dispatch({ type: "auth/logout" });
+        store.dispatch({ type: 'auth/logout' });
       } else {
-        localStorage.removeItem("token");
+        localStorage.removeItem('token');
       }
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;
-

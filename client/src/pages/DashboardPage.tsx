@@ -3,10 +3,30 @@ import { useAppSelector } from '../store/hooks';
 import { selectUser } from '../store/slices/authSlice';
 
 const STATS_CONFIG = [
-  { label: 'Open Tickets', value: '—', icon: <Ticket size={22} />, color: 'bg-blue-500' },
-  { label: 'In Progress', value: '—', icon: <Clock size={22} />, color: 'bg-amber-500' },
-  { label: 'Resolved', value: '—', icon: <CheckCircle2 size={22} />, color: 'bg-emerald-500' },
-  { label: 'Total Users', value: '—', icon: <Users size={22} />, color: 'bg-indigo-500' },
+  {
+    label: 'Open Tickets',
+    value: '—',
+    icon: <Ticket size={22} />,
+    color: 'bg-blue-500',
+  },
+  {
+    label: 'In Progress',
+    value: '—',
+    icon: <Clock size={22} />,
+    color: 'bg-amber-500',
+  },
+  {
+    label: 'Resolved',
+    value: '—',
+    icon: <CheckCircle2 size={22} />,
+    color: 'bg-emerald-500',
+  },
+  {
+    label: 'Total Users',
+    value: '—',
+    icon: <Users size={22} />,
+    color: 'bg-indigo-500',
+  },
 ];
 
 export default function DashboardPage() {
@@ -36,7 +56,9 @@ export default function DashboardPage() {
             key={stat.label}
             className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
           >
-            <div className={`flex h-11 w-11 items-center justify-center rounded-lg text-white ${stat.color}`}>
+            <div
+              className={`flex h-11 w-11 items-center justify-center rounded-lg text-white ${stat.color}`}
+            >
               {stat.icon}
             </div>
             <div>
