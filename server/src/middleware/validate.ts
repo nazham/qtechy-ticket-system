@@ -2,17 +2,18 @@ import { NextFunction, Request, Response } from "express";
 import { ZodSchema, ZodError } from "zod";
 import { AppError } from "./errorHandler";
 
-/**
- * Generic Zod validation middleware factory.
- * Usage: router.post("/route", validate(mySchema), handler)
- */
-export const validate =
+const validateRequest =
+  (target: "body" | "query" | "params") =>
   (schema: ZodSchema) =>
   (req: Request, _res: Response, next: NextFunction): void => {
     try {
-      // parse() throws ZodError on failure and mutates req.body with the
-      // cleaned/coerced output (e.g. trimmed strings, lowercased email)
-      req.body = schema.parse(req.body);
+      const parsed = schema.parse(req[target]);
+      Object.defineProperty(req, target, {
+        value: parsed,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -23,3 +24,15 @@ export const validate =
       }
     }
   };
+
+/**
+ * Generic Zod validation middleware factory for req.body.
+ * Usage: router.post("/route", validate(mySchema), handler)
+ */
+export const validate = validateRequest("body");
+
+/**
+ * Generic Zod validation middleware factory for req.query.
+ * Usage: router.get("/route", validateQuery(mySchema), handler)
+ */
+export const validateQuery = validateRequest("query");

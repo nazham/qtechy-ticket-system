@@ -10,11 +10,12 @@ import {
   getTicketStatistics,
 } from "../controllers/ticketController";
 import { authorizePermissions, protect } from "../middleware/authMiddleware";
-import { validate } from "../middleware/validate";
+import { validate, validateQuery } from "../middleware/validate";
 import {
   addCommentSchema,
   assignTicketSchema,
   createTicketSchema,
+  getTicketsQuerySchema,
   updateTicketStatusSchema,
 } from "../validators/ticketValidators";
 
@@ -26,7 +27,7 @@ router.use(protect);
 router
   .route("/")
   .post(authorizePermissions(Permission.CreateTicket), validate(createTicketSchema), createTicket)
-  .get(getTickets);
+  .get(validateQuery(getTicketsQuerySchema), getTickets);
 
 router.get("/statistics", getTicketStatistics);
 

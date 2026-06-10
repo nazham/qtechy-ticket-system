@@ -41,3 +41,15 @@ export type CreateTicketInput = z.infer<typeof createTicketSchema>;
 export type UpdateTicketStatusInput = z.infer<typeof updateTicketStatusSchema>;
 export type AssignTicketInput = z.infer<typeof assignTicketSchema>;
 export type AddCommentInput = z.infer<typeof addCommentSchema>;
+
+export const getTicketsQuerySchema = z.object({
+  searchTerm: z.string().optional(),
+  status: z.enum(TicketStatus).optional(),
+  priority: z.enum(TicketPriority).optional(),
+  sortBy: z.enum(["createdAt", "updatedAt", "title", "ticketNumber", "status", "priority"]).optional(),
+  sortOrder: z.enum(["asc", "desc", "1", "-1"]).optional(),
+  page: z.coerce.number().min(1).optional(),
+  limit: z.coerce.number().min(1).max(100).optional(),
+});
+
+export type GetTicketsQueryInput = z.infer<typeof getTicketsQuerySchema>;

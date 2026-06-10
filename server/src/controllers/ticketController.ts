@@ -39,13 +39,12 @@ export const getTickets = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+    const { searchTerm, status, priority, sortBy, sortOrder, page, limit } = req.query as any;
 
     const { tickets, pagination } = await getTicketsService(
       req.user!._id.toString(),
       req.user!.role,
-      { page, limit },
+      { page, limit, searchTerm, status, priority, sortBy, sortOrder },
     );
 
     res.status(200).json({

@@ -45,28 +45,59 @@ export const createTicketService = async (
 export const getTicketsService = async (
   userId: string,
   userRole: UserRole,
-  options?: { page?: number; limit?: number },
+  options?: {
+    page?: number;
+    limit?: number;
+    searchTerm?: string;
+    status?: TicketStatus;
+    priority?: TicketPriority;
+    sortBy?: string;
+    sortOrder?: string;
+  },
 ) => {
   const page = Math.max(1, options?.page || 1);
   const limit = Math.max(1, Math.min(100, options?.limit || 10));
   const skip = (page - 1) * limit;
 
-  let query = {};
+  let rbacQuery: any = {};
   const userPermissions = ROLE_PERMISSIONS[userRole] || [];
   if (userPermissions.includes(Permission.ViewAllTickets)) {
     // Admins see everything
-    query = {};
+    rbacQuery = {};
   } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
     // Agents see tickets assigned to them
-    query = { assignedTo: userId };
+    rbacQuery = { assignedTo: userId };
   } else {
     // Users only see their own tickets
-    query = { createdBy: userId };
+    rbacQuery = { createdBy: userId };
+  }
+
+  const filters: any = {};
+  if (options?.searchTerm) {
+    const escapedSearchTerm = options.searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filters.$or = [
+      { title: { $regex: escapedSearchTerm, $options: "i" } },
+      { ticketNumber: { $regex: escapedSearchTerm, $options: "i" } },
+    ];
+  }
+  if (options?.status) {
+    filters.status = options.status;
+  }
+  if (options?.priority) {
+    filters.priority = options.priority;
+  }
+
+  const query = { ...rbacQuery, ...filters };
+
+  let sortOptions: any = { createdAt: -1 };
+  if (options?.sortBy) {
+    const order = options.sortOrder === "asc" || options.sortOrder === "1" ? 1 : -1;
+    sortOptions = { [options.sortBy]: order };
   }
 
   const tickets = await Ticket.find(query)
     .populate("createdBy", "name email")
-    .sort({ createdAt: -1 })
+    .sort(sortOptions)
     .skip(skip)
     .limit(limit);
 
