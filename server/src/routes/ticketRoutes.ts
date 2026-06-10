@@ -22,7 +22,14 @@ const router = Router();
 // Apply authentication middleware to all routes in this file
 router.use(protect);
 
-router.route("/").post(validate(createTicketSchema), createTicket).get(getTickets);
+router
+  .route("/")
+  .post(
+    authorizeRoles(UserRole.User, UserRole.Admin),
+    validate(createTicketSchema),
+    createTicket,
+  )
+  .get(getTickets);
 
 router.get("/:id", getTicket);
 
