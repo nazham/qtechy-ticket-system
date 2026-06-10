@@ -7,6 +7,7 @@ import {
   getTicketByIdService,
   getTicketsService,
   updateTicketStatusService,
+  getTicketStatisticsService,
 } from "../services/ticketService";
 
 // @desc    Create new ticket
@@ -149,6 +150,29 @@ export const addComment = async (
     res.status(200).json({
       success: true,
       data: ticket,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get ticket statistics
+// @route   GET /api/tickets/statistics
+// @access  Private
+export const getTicketStatistics = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const userId = req.user!._id.toString();
+    const userRole = req.user!.role;
+
+    const data = await getTicketStatisticsService(userId, userRole);
+
+    res.status(200).json({
+      success: true,
+      data,
     });
   } catch (error) {
     next(error);

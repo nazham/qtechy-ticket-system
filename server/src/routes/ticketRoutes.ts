@@ -7,6 +7,7 @@ import {
   getTicket,
   getTickets,
   updateTicketStatus,
+  getTicketStatistics,
 } from "../controllers/ticketController";
 import { authorizePermissions, protect } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validate";
@@ -26,6 +27,8 @@ router
   .route("/")
   .post(authorizePermissions(Permission.CreateTicket), validate(createTicketSchema), createTicket)
   .get(getTickets);
+
+router.get("/statistics", getTicketStatistics);
 
 router.get("/:id", getTicket);
 

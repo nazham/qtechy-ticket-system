@@ -9,7 +9,7 @@ import {
   UserRole,
 } from "../constants/enums";
 import { AppError } from "../middleware/errorHandler";
-import Ticket from "../models/Ticket";
+import Ticket, { ITicket, IComment, IStatusHistory } from "../models/Ticket";
 import User from "../models/User";
 
 const generateTicketNumber = (): string => {
@@ -169,4 +169,165 @@ export const addCommentService = async (
   });
 
   return await ticket.save();
+};
+
+const mapRecentTickets = (tickets: ITicket[]) => {
+  return tickets.map(t => {
+    let lastActivity = "Ticket created";
+    let lastTime = t.createdAt.getTime();
+
+    if (t.statusHistory && t.statusHistory.length > 0) {
+      const latestStatus = t.statusHistory.reduce((prev: IStatusHistory, current: IStatusHistory) => 
+        (prev.changedAt.getTime() > current.changedAt.getTime()) ? prev : current
+      );
+      if (latestStatus.changedAt.getTime() > lastTime) {
+        lastActivity = `Status updated to ${latestStatus.status}`;
+        lastTime = latestStatus.changedAt.getTime();
+      }
+    }
+
+    if (t.comments && t.comments.length > 0) {
+      const latestComment = t.comments.reduce((prev: IComment, current: IComment) => 
+        (prev.createdAt.getTime() > current.createdAt.getTime()) ? prev : current
+      );
+      if (latestComment.createdAt.getTime() > lastTime) {
+        lastActivity = "New comment added";
+        lastTime = latestComment.createdAt.getTime();
+      }
+    }
+
+    return {
+      _id: t._id,
+      ticketNumber: t.ticketNumber,
+      title: t.title,
+      status: t.status,
+      updatedAt: t.updatedAt,
+      lastActivity,
+    };
+  });
+};
+
+export const getTicketStatisticsService = async (
+  userId: string,
+  userRole: UserRole,
+) => {
+  let query = {};
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+  if (userPermissions.includes(Permission.ViewAllTickets)) {
+    // Admins see everything
+    query = {};
+  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
+    // Agents see tickets assigned to them
+    query = { assignedTo: new Types.ObjectId(userId) };
+  } else {
+    // Users only see their own tickets
+    query = { createdBy: new Types.ObjectId(userId) };
+  }
+
+  // Common: status counts
+  const statusCounts = await Ticket.aggregate([
+    { $match: query },
+    { $group: { _id: "$status", count: { $sum: 1 } } }
+  ]);
+
+  const stats = {
+    open: 0,
+    inProgress: 0,
+    resolved: 0,
+    closed: 0,
+  };
+
+  statusCounts.forEach(item => {
+    switch (item._id) {
+      case TicketStatus.Open:
+        stats.open = item.count;
+        break;
+      case TicketStatus.InProgress:
+        stats.inProgress = item.count;
+        break;
+      case TicketStatus.Resolved:
+        stats.resolved = item.count;
+        break;
+      case TicketStatus.Closed:
+        stats.closed = item.count;
+        break;
+    }
+  });
+
+  // Role-specific tailored data
+  let totalUsers: number | undefined = undefined;
+  let triageBacklog: number | undefined = undefined;
+  let categoryDistribution: Record<string, number> | undefined = undefined;
+  let urgentEscalations: number | undefined = undefined;
+  let priorityFocus: number | undefined = undefined;
+  let recentTickets: any[] | undefined = undefined;
+
+  if (userPermissions.includes(Permission.ManageUsers)) {
+    // Admin metrics (run concurrently for best performance)
+    const [usersCount, backlogCount, catCounts, escalationsCount] = await Promise.all([
+      User.countDocuments({ role: { $in: [UserRole.User, UserRole.Agent] } }),
+      Ticket.countDocuments({
+        assignedTo: null,
+        status: { $in: [TicketStatus.Open, TicketStatus.InProgress] },
+      }),
+      Ticket.aggregate([{ $group: { _id: "$category", count: { $sum: 1 } } }]),
+      Ticket.countDocuments({
+        priority: { $in: [TicketPriority.High, TicketPriority.Urgent] },
+        status: { $in: [TicketStatus.Open, TicketStatus.InProgress] },
+      }),
+    ]);
+
+    totalUsers = usersCount;
+    triageBacklog = backlogCount;
+    urgentEscalations = escalationsCount;
+
+    categoryDistribution = {
+      [TicketCategory.Bug]: 0,
+      [TicketCategory.FeatureRequest]: 0,
+      [TicketCategory.TechnicalIssue]: 0,
+      [TicketCategory.PaymentIssue]: 0,
+      [TicketCategory.AccountIssue]: 0,
+      [TicketCategory.Other]: 0,
+    };
+
+    catCounts.forEach(item => {
+      if (item._id && categoryDistribution) {
+        categoryDistribution[item._id] = item.count;
+      }
+    });
+  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
+    // Agent metrics (run concurrently for best performance)
+    const agentObjectId = new Types.ObjectId(userId);
+    const [focusCount, agentTickets] = await Promise.all([
+      Ticket.countDocuments({
+        assignedTo: agentObjectId,
+        priority: { $in: [TicketPriority.High, TicketPriority.Urgent] },
+        status: { $in: [TicketStatus.Open, TicketStatus.InProgress] },
+      }),
+      Ticket.find({ assignedTo: agentObjectId })
+        .sort({ updatedAt: -1 })
+        .limit(5),
+    ]);
+
+    priorityFocus = focusCount;
+    recentTickets = mapRecentTickets(agentTickets);
+  } else {
+    // User metrics
+    const userObjectId = new Types.ObjectId(userId);
+    const userTickets = await Ticket.find({ createdBy: userObjectId })
+      .sort({ updatedAt: -1 })
+      .limit(5);
+
+    recentTickets = mapRecentTickets(userTickets);
+  }
+
+  return {
+    ticketsByStatus: stats,
+    totalUsers,
+    triageBacklog,
+    categoryDistribution,
+    urgentEscalations,
+    priorityFocus,
+    recentTickets,
+  };
 };

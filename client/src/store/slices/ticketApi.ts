@@ -26,6 +26,28 @@ export interface CreateTicketPayload {
   priority: Ticket['priority'];
 }
 
+export interface TicketStatistics {
+  ticketsByStatus: {
+    open: number;
+    inProgress: number;
+    resolved: number;
+    closed: number;
+  };
+  totalUsers?: number;
+  triageBacklog?: number;
+  categoryDistribution?: Record<string, number>;
+  urgentEscalations?: number;
+  priorityFocus?: number;
+  recentTickets?: Array<{
+    _id: string;
+    ticketNumber: string;
+    title: string;
+    status: Ticket['status'];
+    updatedAt: string;
+    lastActivity: string;
+  }>;
+}
+
 interface GetTicketsResponse {
   success: boolean;
   count: number;
@@ -35,6 +57,11 @@ interface GetTicketsResponse {
 interface CreateTicketResponse {
   success: boolean;
   data: Ticket;
+}
+
+interface GetTicketStatisticsResponse {
+  success: boolean;
+  data: TicketStatistics;
 }
 
 export const ticketApi = apiSlice.injectEndpoints({
@@ -54,6 +81,13 @@ export const ticketApi = apiSlice.injectEndpoints({
           : [{ type: 'Ticket', id: 'LIST' }],
     }),
 
+    getTicketStatistics: build.query<TicketStatistics, void>({
+      query: () => '/tickets/statistics',
+      transformResponse: (response: GetTicketStatisticsResponse) =>
+        response.data,
+      providesTags: ['Ticket'],
+    }),
+
     createTicket: build.mutation<Ticket, CreateTicketPayload>({
       query: (ticketData) => ({
         url: '/tickets',
@@ -66,4 +100,8 @@ export const ticketApi = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useGetTicketsQuery, useCreateTicketMutation } = ticketApi;
+export const {
+  useGetTicketsQuery,
+  useCreateTicketMutation,
+  useGetTicketStatisticsQuery,
+} = ticketApi;
