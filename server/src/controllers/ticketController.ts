@@ -1,5 +1,4 @@
 import { NextFunction, Response } from "express";
-import { UserRole } from "../constants/enums";
 import { AuthRequest } from "../middleware/authMiddleware";
 import {
   addCommentService,
@@ -12,7 +11,7 @@ import {
 
 // @desc    Create new ticket
 // @route   POST /api/tickets
-// @access  Private
+// @access  Private (Permission: tickets:create)
 export const createTicket = async (
   req: AuthRequest,
   res: Response,
@@ -44,7 +43,7 @@ export const getTickets = async (
 
     const { tickets, pagination } = await getTicketsService(
       req.user!._id.toString(),
-      req.user!.role as UserRole,
+      req.user!.role,
       { page, limit },
     );
 
@@ -70,7 +69,7 @@ export const getTicket = async (
   try {
     const ticketId = req.params.id as string;
     const userId = req.user!._id.toString();
-    const userRole = req.user!.role as UserRole;
+    const userRole = req.user!.role;
 
     const ticket = await getTicketByIdService(ticketId, userId, userRole);
 
@@ -84,8 +83,8 @@ export const getTicket = async (
 };
 
 // @desc    Assign ticket to agent
-// @route   PATCH /api/tickets/:id/assign
-// @access  Private
+// @route   PUT /api/tickets/:id/assign
+// @access  Private (Permission: tickets:assign)
 export const assignTicket = async (
   req: AuthRequest,
   res: Response,
@@ -107,8 +106,8 @@ export const assignTicket = async (
 };
 
 // @desc    Update ticket status
-// @route   PATCH /api/tickets/:id/status
-// @access  Private
+// @route   PUT /api/tickets/:id/status
+// @access  Private (Permission: tickets:update-status)
 export const updateTicketStatus = async (
   req: AuthRequest,
   res: Response,
@@ -118,7 +117,7 @@ export const updateTicketStatus = async (
     const ticketId = req.params.id as string;
     const { status } = req.body;
     const userId = req.user!._id.toString();
-    const userRole = req.user!.role as UserRole;
+    const userRole = req.user!.role;
 
     const ticket = await updateTicketStatusService(ticketId, status, userId, userRole);
 
@@ -133,7 +132,7 @@ export const updateTicketStatus = async (
 
 // @desc    Add comment to ticket
 // @route   POST /api/tickets/:id/comments
-// @access  Private
+// @access  Private (Permission: tickets:add-comment)
 export const addComment = async (
   req: AuthRequest,
   res: Response,
@@ -143,7 +142,7 @@ export const addComment = async (
     const ticketId = req.params.id as string;
     const { message } = req.body;
     const userId = req.user!._id.toString();
-    const userRole = req.user!.role as UserRole;
+    const userRole = req.user!.role;
 
     const ticket = await addCommentService(ticketId, userId, userRole, message);
 

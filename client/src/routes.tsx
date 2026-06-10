@@ -19,6 +19,8 @@ import UsersPage from './pages/UsersPage';
 import { useAppSelector } from './store/hooks';
 import { selectIsAuthenticated, selectUser } from './store/slices/authSlice';
 
+import { Permission } from './constants/permissions';
+
 function CatchAllRedirect() {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
@@ -47,7 +49,9 @@ export const router = createBrowserRouter(
       </Route>
 
       {/* ── Admin-Only Routes ──────────────────────────────────────── */}
-      <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+      <Route
+        element={<ProtectedRoute requiredPermission={Permission.ManageUsers} />}
+      >
         <Route element={<MainLayout />}>
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/users" element={<UsersPage />} />
@@ -55,7 +59,11 @@ export const router = createBrowserRouter(
       </Route>
 
       {/* ── Agent + Admin Routes ───────────────────────────────────── */}
-      <Route element={<ProtectedRoute allowedRoles={['admin', 'agent']} />}>
+      <Route
+        element={
+          <ProtectedRoute requiredPermission={Permission.ViewSettings} />
+        }
+      >
         <Route element={<MainLayout />}>
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

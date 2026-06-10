@@ -12,13 +12,14 @@ import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { logout, selectUser, type User } from '../../store/slices/authSlice';
+import { logout, selectUser } from '../../store/slices/authSlice';
+import { Permission, type PermissionValue } from '../../constants/permissions';
 
 interface NavItem {
   label: string;
   to: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
-  roles?: User['role'][];
+  permission?: PermissionValue;
 }
 
 const navItems: NavItem[] = [
@@ -36,19 +37,19 @@ const navItems: NavItem[] = [
     label: 'Users',
     to: '/users',
     icon: Users,
-    roles: ['admin'],
+    permission: Permission.ManageUsers,
   },
   {
     label: 'Admin Panel',
     to: '/admin',
     icon: ShieldCheck,
-    roles: ['admin'],
+    permission: Permission.ManageUsers,
   },
   {
     label: 'Settings',
     to: '/settings',
     icon: Settings,
-    roles: ['admin', 'agent'],
+    permission: Permission.ViewSettings,
   },
 ];
 
@@ -76,9 +77,10 @@ export default function MainLayout() {
     navigate('/login');
   };
 
-  // Filter nav items by the current user's role
+  // Filter nav items by the current user's permissions
   const visibleNavItems = navItems.filter(
-    (item) => !item.roles || (user && item.roles.includes(user.role))
+    (item) =>
+      !item.permission || (user && user.permissions.includes(item.permission))
   );
 
   return (

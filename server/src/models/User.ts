@@ -1,5 +1,5 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { USER_ROLES, UserRole } from "../constants/enums";
+import { ROLE_PERMISSIONS, USER_ROLES, UserRole } from "../constants/enums";
 
 export interface IUser extends Document {
   name: string;
@@ -34,7 +34,10 @@ const userSchema = new Schema<IUser>(
 userSchema.set("toJSON", {
   transform(_doc, ret) {
     const { password, __v, ...rest } = ret;
-    return rest;
+    return {
+      ...rest,
+      permissions: ROLE_PERMISSIONS[rest.role as UserRole] || [],
+    };
   },
 });
 

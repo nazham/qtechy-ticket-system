@@ -1,6 +1,13 @@
 import crypto from "crypto";
 import { Types } from "mongoose";
-import { TicketCategory, TicketPriority, TicketStatus, UserRole } from "../constants/enums";
+import {
+  Permission,
+  ROLE_PERMISSIONS,
+  TicketCategory,
+  TicketPriority,
+  TicketStatus,
+  UserRole,
+} from "../constants/enums";
 import { AppError } from "../middleware/errorHandler";
 import Ticket from "../models/Ticket";
 import User from "../models/User";
@@ -45,10 +52,11 @@ export const getTicketsService = async (
   const skip = (page - 1) * limit;
 
   let query = {};
-  if (userRole === UserRole.Admin) {
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+  if (userPermissions.includes(Permission.ViewAllTickets)) {
     // Admins see everything
     query = {};
-  } else if (userRole === UserRole.Agent) {
+  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
     // Agents see tickets assigned to them
     query = { assignedTo: userId };
   } else {
@@ -85,12 +93,15 @@ export const getTicketByIdService = async (
     throw new AppError("Ticket not found", 404);
   }
 
-  if (userRole === UserRole.User) {
-    if (ticket.createdBy.toString() !== userId) {
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+  if (userPermissions.includes(Permission.ViewAllTickets)) {
+    // Admin-level: can see any ticket, no ownership check needed
+  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
+    if (!ticket.assignedTo || ticket.assignedTo.toString() !== userId) {
       throw new AppError("Not authorized to access this ticket", 403);
     }
-  } else if (userRole === UserRole.Agent) {
-    if (!ticket.assignedTo || ticket.assignedTo.toString() !== userId) {
+  } else {
+    if (ticket.createdBy.toString() !== userId) {
       throw new AppError("Not authorized to access this ticket", 403);
     }
   }

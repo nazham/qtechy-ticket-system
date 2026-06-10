@@ -6,6 +6,7 @@ export interface User {
   name: string;
   email: string;
   role: 'admin' | 'agent' | 'user';
+  permissions: string[];
 }
 
 export const VALID_ROLES: User['role'][] = ['admin', 'agent', 'user'];

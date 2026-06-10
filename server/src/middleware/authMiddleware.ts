@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/User";
 import { AppError } from "./errorHandler";
+import { Permission, ROLE_PERMISSIONS, UserRole } from "../constants/enums";
 
 // 1. Extend the Express Request interface
 export interface AuthRequest extends Request {
@@ -51,14 +52,27 @@ export const protect = async (
   }
 };
 
-// 3. Authorization Middleware (What can you do?)
-export const authorizeRoles = (...roles: string[]) => {
+export const authorizePermissions = (...requiredPermissions: Permission[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return next(
-        new AppError(`Role (${req.user?.role}) is not allowed to access this resource`, 403),
-      );
+    if (!req.user) {
+      return next(new AppError("Not authorized, user not found", 401));
     }
+
+    const userRole = req.user.role;
+    const userPermissions = ROLE_PERMISSIONS[userRole];
+    if (!userPermissions) {
+      console.warn(
+        `[RBAC] Unknown role "${userRole}" for user ${req.user._id} — denying all permissions`,
+      );
+      return next(new AppError("Not authorized to access this resource", 403));
+    }
+
+    const hasPermission = requiredPermissions.every((perm) => userPermissions.includes(perm));
+
+    if (!hasPermission) {
+      return next(new AppError("Not authorized to access this resource", 403));
+    }
+
     next();
   };
 };

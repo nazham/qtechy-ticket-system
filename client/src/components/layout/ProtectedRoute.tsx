@@ -6,22 +6,33 @@ import {
   selectIsAuthenticated,
   selectIsInitializing,
   selectUser,
-  type User,
 } from '../../store/slices/authSlice';
+import type { PermissionValue } from '../../constants/permissions';
 
 interface ProtectedRouteProps {
-  /** Roles permitted to access this route. If omitted, any authenticated user can access. */
-  allowedRoles?: User['role'][];
+  /** Permission required to access this route. If omitted, any authenticated user can access. */
+  requiredPermission?: PermissionValue | PermissionValue[];
+  /** Mode to match permissions: 'every' (all must match) or 'some' (any must match). Defaults to 'every'. */
+  mode?: 'every' | 'some';
 }
 
-export default function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
+export default function ProtectedRoute({
+  requiredPermission,
+  mode = 'every',
+}: ProtectedRouteProps) {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
   const isInitializing = useAppSelector(selectIsInitializing);
   const location = useLocation();
 
   const isAuthorized =
-    !allowedRoles || (user && allowedRoles.includes(user.role));
+    !requiredPermission ||
+    (user &&
+      (Array.isArray(requiredPermission)
+        ? mode === 'every'
+          ? requiredPermission.every((p) => user.permissions.includes(p))
+          : requiredPermission.some((p) => user.permissions.includes(p))
+        : user.permissions.includes(requiredPermission)));
 
   useEffect(() => {
     if (isAuthenticated && user && !isAuthorized) {

@@ -8,8 +8,8 @@ import {
   Layers,
 } from 'lucide-react';
 import { useGetTicketsQuery } from '../store/slices/ticketApi';
-import { useAppSelector } from '../store/hooks';
-import { selectUser } from '../store/slices/authSlice';
+import { useHasPermission } from '../hooks/useHasPermission';
+import { Permission } from '../constants/permissions';
 import CreateTicketModal from '../components/tickets/CreateTicketModal';
 
 export default function TicketsPage() {
@@ -21,8 +21,7 @@ export default function TicketsPage() {
     isFetching,
   } = useGetTicketsQuery();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const user = useAppSelector(selectUser);
-  const canCreate = user?.role === 'user' || user?.role === 'admin';
+  const canCreate = useHasPermission(Permission.CreateTicket);
 
   // Status Badge Helper
   const getStatusBadgeClass = (status: string) => {

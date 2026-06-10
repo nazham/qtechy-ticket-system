@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { UserRole } from "../constants/enums";
+import { Permission } from "../constants/enums";
 import {
   addComment,
   assignTicket,
@@ -8,7 +8,7 @@ import {
   getTickets,
   updateTicketStatus,
 } from "../controllers/ticketController";
-import { authorizeRoles, protect } from "../middleware/authMiddleware";
+import { authorizePermissions, protect } from "../middleware/authMiddleware";
 import { validate } from "../middleware/validate";
 import {
   addCommentSchema,
@@ -24,29 +24,30 @@ router.use(protect);
 
 router
   .route("/")
-  .post(
-    authorizeRoles(UserRole.User, UserRole.Admin),
-    validate(createTicketSchema),
-    createTicket,
-  )
+  .post(authorizePermissions(Permission.CreateTicket), validate(createTicketSchema), createTicket)
   .get(getTickets);
 
 router.get("/:id", getTicket);
 
 router.put(
   "/:id/assign",
-  authorizeRoles(UserRole.Admin),
+  authorizePermissions(Permission.AssignTicket),
   validate(assignTicketSchema),
   assignTicket,
 );
 
 router.put(
   "/:id/status",
-  authorizeRoles(UserRole.Admin, UserRole.Agent),
+  authorizePermissions(Permission.UpdateTicketStatus),
   validate(updateTicketStatusSchema),
   updateTicketStatus,
 );
 
-router.post("/:id/comments", validate(addCommentSchema), addComment);
+router.post(
+  "/:id/comments",
+  authorizePermissions(Permission.AddComment),
+  validate(addCommentSchema),
+  addComment,
+);
 
 export default router;
