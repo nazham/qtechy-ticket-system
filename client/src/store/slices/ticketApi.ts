@@ -1,9 +1,10 @@
-import { apiSlice } from '../apiSlice';
 import {
-  TicketStatus,
   TicketCategory,
   TicketPriority,
+  TicketStatus,
 } from '../../constants/enums';
+import { apiSlice } from '../apiSlice';
+import type { RootState } from '../store';
 
 export interface Ticket {
   _id: string;
@@ -130,6 +131,27 @@ export interface UpdateTicketPayload {
   updates: Partial<CreateTicketPayload>;
 }
 
+/**
+ * Returns all serialized arg-keys currently cached for the `getTickets` query.
+ * We inspect the RTK Query `queries` sub-state to find them.
+ */
+function getCachedGetTicketsArgs(getState: () => unknown) {
+  const state = getState() as RootState;
+  const queries = state[apiSlice.reducerPath]?.queries ?? {};
+  const argsSet: Array<GetTicketsParams | void> = [];
+
+  for (const key of Object.keys(queries)) {
+    if (key.startsWith('getTickets(')) {
+      const entry = queries[key];
+      // Only patch fulfilled / non-errored entries
+      if (entry && entry.status === 'fulfilled') {
+        argsSet.push(entry.originalArgs as GetTicketsParams | void);
+      }
+    }
+  }
+  return argsSet;
+}
+
 export const ticketApi = apiSlice.injectEndpoints({
   endpoints: (build) => ({
     getTickets: build.query<GetTicketsResponse, GetTicketsParams | void>({
@@ -177,10 +199,33 @@ export const ticketApi = apiSlice.injectEndpoints({
         body: ticketData,
       }),
       transformResponse: (response: CreateTicketResponse) => response.data,
-      invalidatesTags: [
-        { type: 'Ticket', id: 'LIST' },
-        { type: 'Ticket', id: 'STATISTICS' },
-      ],
+      // Pessimistic update: we can't predict _id / ticketNumber, so we wait for the server, then insert the new ticket into all cached lists.
+      // Statistics invalidation is done manually inside onQueryStarted to avoid a race with the cache patch (invalidatesTags fires before onQueryStarted finishes its async work).
+      async onQueryStarted(_arg, { dispatch, queryFulfilled, getState }) {
+        try {
+          const { data: newTicket } = await queryFulfilled;
+          const cachedArgs = getCachedGetTicketsArgs(getState);
+
+          for (const args of cachedArgs) {
+            dispatch(
+              ticketApi.util.updateQueryData('getTickets', args, (draft) => {
+                draft.data.unshift(newTicket);
+                draft.count += 1;
+                if (draft.pagination) {
+                  draft.pagination.total += 1;
+                }
+              })
+            );
+          }
+
+          // Revalidate statistics after the list cache is patched
+          dispatch(
+            ticketApi.util.invalidateTags([
+              { type: 'Ticket', id: 'STATISTICS' },
+            ])
+          );
+        } catch {}
+      },
     }),
 
     getTicket: build.query<Ticket, string>({
@@ -196,11 +241,34 @@ export const ticketApi = apiSlice.injectEndpoints({
         body: { status },
       }),
       transformResponse: (response: GetTicketResponse) => response.data,
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: 'Ticket', id },
-        { type: 'Ticket', id: 'LIST' },
-        { type: 'Ticket', id: 'STATISTICS' },
-      ],
+      async onQueryStarted(
+        { id, status },
+        { dispatch, queryFulfilled, getState }
+      ) {
+        const patchTicket = dispatch(
+          ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+            draft.status = status;
+          })
+        );
+
+        const cachedArgs = getCachedGetTicketsArgs(getState);
+        const listPatches = cachedArgs.map((args) =>
+          dispatch(
+            ticketApi.util.updateQueryData('getTickets', args, (draft) => {
+              const ticket = draft.data.find((t) => t._id === id);
+              if (ticket) ticket.status = status;
+            })
+          )
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchTicket.undo();
+          listPatches.forEach((p) => p.undo());
+        }
+      },
+      invalidatesTags: [{ type: 'Ticket', id: 'STATISTICS' }],
     }),
 
     assignTicket: build.mutation<Ticket, AssignTicketPayload>({
@@ -210,11 +278,34 @@ export const ticketApi = apiSlice.injectEndpoints({
         body: { assignedTo },
       }),
       transformResponse: (response: GetTicketResponse) => response.data,
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: 'Ticket', id },
-        { type: 'Ticket', id: 'LIST' },
-        { type: 'Ticket', id: 'STATISTICS' },
-      ],
+      async onQueryStarted(
+        { id, assignedTo },
+        { dispatch, queryFulfilled, getState }
+      ) {
+        const patchTicket = dispatch(
+          ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+            draft.assignedTo = assignedTo ?? undefined;
+          })
+        );
+
+        const cachedArgs = getCachedGetTicketsArgs(getState);
+        const listPatches = cachedArgs.map((args) =>
+          dispatch(
+            ticketApi.util.updateQueryData('getTickets', args, (draft) => {
+              const ticket = draft.data.find((t) => t._id === id);
+              if (ticket) ticket.assignedTo = assignedTo ?? undefined;
+            })
+          )
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          patchTicket.undo();
+          listPatches.forEach((p) => p.undo());
+        }
+      },
+      invalidatesTags: [{ type: 'Ticket', id: 'STATISTICS' }],
     }),
 
     addComment: build.mutation<Ticket, AddCommentPayload>({
@@ -227,21 +318,18 @@ export const ticketApi = apiSlice.injectEndpoints({
       async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
         try {
           const { data: updatedTicket } = await queryFulfilled;
+          // Pessimistic update: merge the full server response into the
+          // individual ticket cache so comments appear instantly.
           dispatch(
             ticketApi.util.updateQueryData('getTicket', id, (draft) => {
               Object.assign(draft, updatedTicket);
             })
           );
-        } catch {
-          // In case of error, the query will handle it. We just do pessimistic update here.
-        }
+        } catch {}
       },
-      // Note: We use an optimistic-on-success update for getTicket,
-      // and we fallback to invalidating both LIST and the specific Ticket ID.
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: 'Ticket', id: 'LIST' },
-        { type: 'Ticket', id },
-      ],
+      // Comments don't change statistics; only invalidate the specific ticket
+      // so that if the user navigates away and back, they see the latest.
+      invalidatesTags: (_result, _error, { id }) => [{ type: 'Ticket', id }],
     }),
 
     updateTicket: build.mutation<Ticket, UpdateTicketPayload>({
@@ -251,11 +339,41 @@ export const ticketApi = apiSlice.injectEndpoints({
         body: updates,
       }),
       transformResponse: (response: GetTicketResponse) => response.data,
-      invalidatesTags: (_result, _error, { id }) => [
-        { type: 'Ticket', id },
-        { type: 'Ticket', id: 'LIST' },
-        { type: 'Ticket', id: 'STATISTICS' },
-      ],
+      async onQueryStarted(
+        { id, updates },
+        { dispatch, queryFulfilled, getState }
+      ) {
+        const patchTicket = dispatch(
+          ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+            Object.assign(draft, updates);
+          })
+        );
+
+        const cachedArgs = getCachedGetTicketsArgs(getState);
+        const listPatches = cachedArgs.map((args) =>
+          dispatch(
+            ticketApi.util.updateQueryData('getTickets', args, (draft) => {
+              const ticket = draft.data.find((t) => t._id === id);
+              if (ticket) Object.assign(ticket, updates);
+            })
+          )
+        );
+
+        try {
+          const { data: serverTicket } = await queryFulfilled;
+          // Reconcile with server truth for the individual ticket cache
+          dispatch(
+            ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+              Object.assign(draft, serverTicket);
+            })
+          );
+        } catch {
+          patchTicket.undo();
+          listPatches.forEach((p) => p.undo());
+        }
+      },
+      // Always revalidate statistics; list & detail are handled optimistically.
+      invalidatesTags: [{ type: 'Ticket', id: 'STATISTICS' }],
     }),
 
     deleteTicket: build.mutation<{ success: boolean }, string>({
@@ -263,9 +381,33 @@ export const ticketApi = apiSlice.injectEndpoints({
         url: `/tickets/${id}`,
         method: 'DELETE',
       }),
+      async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
+        const cachedArgs = getCachedGetTicketsArgs(getState);
+        const listPatches = cachedArgs.map((args) =>
+          dispatch(
+            ticketApi.util.updateQueryData('getTickets', args, (draft) => {
+              const idx = draft.data.findIndex((t) => t._id === id);
+              if (idx !== -1) {
+                draft.data.splice(idx, 1);
+                draft.count -= 1;
+                if (draft.pagination) {
+                  draft.pagination.total -= 1;
+                }
+              }
+            })
+          )
+        );
+
+        try {
+          await queryFulfilled;
+        } catch {
+          listPatches.forEach((p) => p.undo());
+        }
+      },
+      // Revalidate statistics and list so the page fills any empty slots.
       invalidatesTags: [
-        { type: 'Ticket', id: 'LIST' },
         { type: 'Ticket', id: 'STATISTICS' },
+        { type: 'Ticket', id: 'LIST' },
       ],
     }),
   }),

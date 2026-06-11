@@ -1,25 +1,25 @@
-import { useState } from 'react';
 import {
   AlertTriangle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  Edit,
   Layers,
   Plus,
   RefreshCw,
   Ticket as TicketIcon,
-  Edit,
   Trash2,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import type { GetTicketsResponse, Ticket } from '../../store/slices/ticketApi';
-import { useDeleteTicketMutation } from '../../store/slices/ticketApi';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { extractApiError } from '../../api/utils';
 import { useRoles } from '../../hooks/useRoles';
-import TicketFormModal from './TicketFormModal';
+import type { GetTicketsResponse, Ticket } from '../../store/slices/ticketApi';
+import { useDeleteTicketMutation } from '../../store/slices/ticketApi';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
-import { toast } from 'react-toastify';
+import TicketFormModal from './TicketFormModal';
 
 interface TicketTableProps {
   tickets?: Ticket[];
@@ -59,11 +59,11 @@ export default function TicketTable({
   statusFilter,
 }: TicketTableProps) {
   const { isAdmin } = useRoles();
+  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
+  const location = useLocation();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-
-  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
 
   const handleEditClick = (e: React.MouseEvent, ticket: Ticket) => {
     e.preventDefault();
@@ -353,6 +353,7 @@ export default function TicketTable({
                 <td className="px-3 py-2">
                   <Link
                     to={`/tickets/${ticket._id}`}
+                    state={{ search: location.search }}
                     className="text-sm font-semibold text-neutral-text-primary transition-colors hover:text-brand-accent-dark hover:underline"
                   >
                     {ticket.title}
@@ -387,7 +388,7 @@ export default function TicketTable({
                 {showAssignedColumn && (
                   <td className="hidden px-3 py-2 whitespace-nowrap md:table-cell">
                     {typeof ticket.assignedTo === 'object' &&
-                    ticket.assignedTo ? (
+                      ticket.assignedTo ? (
                       <div className="flex items-center gap-1.5">
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-[10px] font-bold text-indigo-600">
                           {ticket.assignedTo.name.charAt(0).toUpperCase()}
@@ -538,11 +539,10 @@ export default function TicketTable({
                       onClick={() =>
                         handlePageChange(pageNum, pagination.pages)
                       }
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${
-                        pagination.page === pageNum
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${pagination.page === pageNum
                           ? 'bg-brand-accent text-white'
                           : 'text-neutral-text-secondary hover:bg-neutral-bg hover:text-neutral-text-primary'
-                      }`}
+                        }`}
                     >
                       {pageNum}
                     </button>

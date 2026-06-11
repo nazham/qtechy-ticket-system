@@ -11,7 +11,7 @@ import {
   User,
 } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { extractApiError } from '../api/utils';
 import CategoryBadge from '../components/tickets/CategoryBadge';
@@ -34,6 +34,12 @@ import {
 export default function TicketDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleBack = () => {
+    const search = location.state?.search || '';
+    navigate(`/tickets${search}`);
+  };
 
   const {
     data: ticket,
@@ -87,7 +93,7 @@ export default function TicketDetailsPage() {
       <div className="flex h-64 flex-col items-center justify-center gap-4 text-red-500">
         <AlertCircle size={32} />
         <h2 className="px-4 text-center text-xl font-bold">{errorMessage}</h2>
-        <button onClick={() => navigate('/tickets')} className="btn-secondary">
+        <button onClick={handleBack} className="btn-secondary">
           Go back to tickets
         </button>
       </div>
@@ -131,7 +137,7 @@ export default function TicketDetailsPage() {
       await deleteTicket(ticket._id).unwrap();
       toast.success('Ticket deleted successfully');
       setIsDeleteModalOpen(false);
-      navigate('/tickets');
+      handleBack();
     } catch (err) {
       toast.error(extractApiError(err, 'Failed to delete ticket'));
     }
@@ -188,7 +194,7 @@ export default function TicketDetailsPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate('/tickets')}
+              onClick={handleBack}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-border bg-neutral-card text-neutral-text-secondary shadow-sm transition-all hover:scale-105 hover:border-brand-accent/30 hover:bg-neutral-card-hover hover:text-brand-accent"
             >
               <ArrowLeft size={16} />
