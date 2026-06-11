@@ -1,16 +1,16 @@
 import {
   AlertTriangle,
-  RefreshCw,
-  Ticket as TicketIcon,
-  Calendar,
-  Layers,
-  ChevronUp,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  Layers,
   Plus,
+  RefreshCw,
+  Ticket as TicketIcon,
 } from 'lucide-react';
-import type { Ticket, GetTicketsResponse } from '../../store/slices/ticketApi';
+import { Link } from 'react-router-dom';
+import type { GetTicketsResponse, Ticket } from '../../store/slices/ticketApi';
 
 interface TicketTableProps {
   tickets?: Ticket[];
@@ -284,10 +284,10 @@ export default function TicketTable({
                 </div>
               </th>
               <th
-                className="group hidden cursor-pointer px-3 py-2 text-xs font-semibold tracking-wider whitespace-nowrap text-neutral-text-secondary uppercase transition-colors hover:text-neutral-text-primary lg:table-cell"
+                className="group hidden cursor-pointer px-3 py-2 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-neutral-text-secondary uppercase transition-colors hover:text-neutral-text-primary lg:table-cell"
                 onClick={() => handleSort('createdAt')}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center justify-center gap-1">
                   Date Created {renderSortIcon('createdAt')}
                 </div>
               </th>
@@ -301,9 +301,12 @@ export default function TicketTable({
               >
                 {/* Subject */}
                 <td className="px-3 py-2">
-                  <div className="text-sm font-semibold text-neutral-text-primary transition-colors group-hover:text-brand-accent-dark">
+                  <Link
+                    to={`/tickets/${ticket._id}`}
+                    className="text-sm font-semibold text-neutral-text-primary transition-colors hover:text-brand-accent-dark hover:underline"
+                  >
                     {ticket.title}
-                  </div>
+                  </Link>
                   <div className="mt-0.5 line-clamp-1 max-w-xs text-xs text-neutral-text-muted">
                     {ticket.description}
                   </div>
@@ -376,15 +379,30 @@ export default function TicketTable({
                 </td>
 
                 {/* Date */}
-                <td className="hidden px-3 py-2 text-sm whitespace-nowrap text-neutral-text-secondary lg:table-cell">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={14} className="text-neutral-text-muted" />
-                    {new Date(ticket.createdAt).toLocaleDateString(undefined, {
+                <td className="hidden px-3 py-2 text-center text-sm whitespace-nowrap text-neutral-text-secondary tabular-nums lg:table-cell">
+                  {(() => {
+                    const date = new Date(ticket.createdAt);
+                    const now = new Date();
+                    const isToday = date.toDateString() === now.toDateString();
+                    const isCurrentYear =
+                      date.getFullYear() === now.getFullYear();
+
+                    if (isToday) {
+                      return date.toLocaleTimeString(undefined, {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false,
+                      });
+                    }
+
+                    return date.toLocaleDateString(undefined, {
                       month: 'short',
                       day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </div>
+                      ...(isCurrentYear
+                        ? { hour: '2-digit', minute: '2-digit', hour12: false }
+                        : { year: 'numeric' }),
+                    });
+                  })()}
                 </td>
               </tr>
             ))}

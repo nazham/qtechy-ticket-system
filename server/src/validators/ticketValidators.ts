@@ -14,6 +14,11 @@ export const createTicketSchema = z.object({
   priority: z.enum(TicketPriority, {
     message: "Invalid ticket priority",
   }),
+  assignedTo: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, "Invalid assignedTo ID format")
+    .optional()
+    .nullable(),
 });
 
 export const updateTicketStatusSchema = z.object({

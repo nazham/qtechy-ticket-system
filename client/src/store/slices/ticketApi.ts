@@ -1,19 +1,18 @@
 import { apiSlice } from '../apiSlice';
+import {
+  TicketStatus,
+  TicketCategory,
+  TicketPriority,
+} from '../../constants/enums';
 
 export interface Ticket {
   _id: string;
   ticketNumber: string;
   title: string;
   description: string;
-  category:
-    | 'Bug'
-    | 'Feature Request'
-    | 'Technical Issue'
-    | 'Payment Issue'
-    | 'Account Issue'
-    | 'Other';
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
-  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+  category: TicketCategory;
+  status: TicketStatus;
+  priority: TicketPriority;
   assignedTo?:
     | {
         _id: string;
@@ -28,6 +27,18 @@ export interface Ticket {
         email: string;
       }
     | string;
+  comments?: Array<{
+    _id: string;
+    user: { _id: string; name: string; email: string; role: string } | string;
+    message: string;
+    createdAt: string;
+  }>;
+  statusHistory?: Array<{
+    _id: string;
+    status: Ticket['status'];
+    changedBy: { _id: string; name: string } | string;
+    changedAt: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -37,6 +48,7 @@ export interface CreateTicketPayload {
   description: string;
   category: Ticket['category'];
   priority: Ticket['priority'];
+  assignedTo?: string | null;
 }
 
 export interface TicketStatistics {
@@ -49,8 +61,7 @@ export interface TicketStatistics {
   totalUsers?: number;
   triageBacklog?: number;
   categoryDistribution?: Record<string, number>;
-  urgentEscalations?: number;
-  priorityFocus?: number;
+  urgentFocus?: number;
   recentTickets?: Array<{
     _id: string;
     ticketNumber: string;
@@ -94,6 +105,26 @@ interface GetTicketStatisticsResponse {
   data: TicketStatistics;
 }
 
+interface GetTicketResponse {
+  success: boolean;
+  data: Ticket;
+}
+
+export interface UpdateTicketStatusPayload {
+  id: string;
+  status: Ticket['status'];
+}
+
+export interface AssignTicketPayload {
+  id: string;
+  assignedTo: string | null;
+}
+
+export interface AddCommentPayload {
+  id: string;
+  message: string;
+}
+
 export const ticketApi = apiSlice.injectEndpoints({
   endpoints: (build) => ({
     getTickets: build.query<GetTicketsResponse, GetTicketsParams | void>({
@@ -131,7 +162,7 @@ export const ticketApi = apiSlice.injectEndpoints({
       query: () => '/tickets/statistics',
       transformResponse: (response: GetTicketStatisticsResponse) =>
         response.data,
-      providesTags: ['Ticket'],
+      providesTags: [{ type: 'Ticket', id: 'STATISTICS' }],
     }),
 
     createTicket: build.mutation<Ticket, CreateTicketPayload>({
@@ -141,7 +172,71 @@ export const ticketApi = apiSlice.injectEndpoints({
         body: ticketData,
       }),
       transformResponse: (response: CreateTicketResponse) => response.data,
-      invalidatesTags: [{ type: 'Ticket', id: 'LIST' }],
+      invalidatesTags: [
+        { type: 'Ticket', id: 'LIST' },
+        { type: 'Ticket', id: 'STATISTICS' },
+      ],
+    }),
+
+    getTicket: build.query<Ticket, string>({
+      query: (id) => `/tickets/${id}`,
+      transformResponse: (response: GetTicketResponse) => response.data,
+      providesTags: (_result, _error, id) => [{ type: 'Ticket', id }],
+    }),
+
+    updateTicketStatus: build.mutation<Ticket, UpdateTicketStatusPayload>({
+      query: ({ id, status }) => ({
+        url: `/tickets/${id}/status`,
+        method: 'PUT',
+        body: { status },
+      }),
+      transformResponse: (response: GetTicketResponse) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Ticket', id },
+        { type: 'Ticket', id: 'LIST' },
+        { type: 'Ticket', id: 'STATISTICS' },
+      ],
+    }),
+
+    assignTicket: build.mutation<Ticket, AssignTicketPayload>({
+      query: ({ id, assignedTo }) => ({
+        url: `/tickets/${id}/assign`,
+        method: 'PUT',
+        body: { assignedTo },
+      }),
+      transformResponse: (response: GetTicketResponse) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Ticket', id },
+        { type: 'Ticket', id: 'LIST' },
+        { type: 'Ticket', id: 'STATISTICS' },
+      ],
+    }),
+
+    addComment: build.mutation<Ticket, AddCommentPayload>({
+      query: ({ id, message }) => ({
+        url: `/tickets/${id}/comments`,
+        method: 'POST',
+        body: { message },
+      }),
+      transformResponse: (response: GetTicketResponse) => response.data,
+      async onQueryStarted({ id }, { dispatch, queryFulfilled }) {
+        try {
+          const { data: updatedTicket } = await queryFulfilled;
+          dispatch(
+            ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+              Object.assign(draft, updatedTicket);
+            })
+          );
+        } catch {
+          // In case of error, the query will handle it. We just do pessimistic update here.
+        }
+      },
+      // Note: We use an optimistic-on-success update for getTicket,
+      // and we fallback to invalidating both LIST and the specific Ticket ID.
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Ticket', id: 'LIST' },
+        { type: 'Ticket', id },
+      ],
     }),
   }),
 });
@@ -150,4 +245,8 @@ export const {
   useGetTicketsQuery,
   useCreateTicketMutation,
   useGetTicketStatisticsQuery,
+  useGetTicketQuery,
+  useUpdateTicketStatusMutation,
+  useAssignTicketMutation,
+  useAddCommentMutation,
 } = ticketApi;

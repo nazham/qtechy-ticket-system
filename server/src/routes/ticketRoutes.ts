@@ -29,7 +29,7 @@ router
   .post(authorizePermissions(Permission.CreateTicket), validate(createTicketSchema), createTicket)
   .get(validateQuery(getTicketsQuerySchema), getTickets);
 
-router.get("/statistics", getTicketStatistics);
+router.get("/statistics", authorizePermissions(Permission.ViewDashboard), getTicketStatistics);
 
 router.get("/:id", getTicket);
 

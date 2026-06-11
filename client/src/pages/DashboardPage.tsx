@@ -269,12 +269,12 @@ export default function DashboardPage() {
               <div className="flex items-center gap-4">
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${
-                    !loading && statsData?.urgentEscalations === 0
+                    !loading && statsData?.urgentFocus === 0
                       ? 'bg-ui-success/10 text-ui-success'
                       : 'bg-ui-danger/10 text-ui-danger'
                   }`}
                 >
-                  {!loading && statsData?.urgentEscalations === 0 ? (
+                  {!loading && statsData?.urgentFocus === 0 ? (
                     <CheckCircle2 size={22} />
                   ) : (
                     <AlertTriangle size={22} className="animate-pulse" />
@@ -285,10 +285,10 @@ export default function DashboardPage() {
                     <div className="text-2xl font-bold text-neutral-text-primary">
                       <MetricValue
                         loading={loading}
-                        value={statsData?.urgentEscalations ?? 0}
+                        value={statsData?.urgentFocus ?? 0}
                       />
                     </div>
-                    {!loading && statsData?.urgentEscalations === 0 && (
+                    {!loading && statsData?.urgentFocus === 0 && (
                       <span className="rounded-full bg-ui-success/10 px-2 py-0.5 text-[10px] font-bold text-ui-success">
                         All Clear
                       </span>
@@ -384,7 +384,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-1">
             <div
               className={`group flex h-full flex-col justify-between rounded-premium-card border border-neutral-border bg-neutral-card p-6 shadow-premium-card transition-all duration-300 hover:shadow-md ${
-                !loading && statsData?.priorityFocus === 0
+                !loading && statsData?.urgentFocus === 0
                   ? 'hover:border-ui-success/30'
                   : 'hover:border-ui-danger/30'
               }`}
@@ -393,12 +393,12 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   <div
                     className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110 ${
-                      !loading && statsData?.priorityFocus === 0
+                      !loading && statsData?.urgentFocus === 0
                         ? 'bg-ui-success/10 text-ui-success'
                         : 'bg-ui-danger/10 text-ui-danger'
                     }`}
                   >
-                    {!loading && statsData?.priorityFocus === 0 ? (
+                    {!loading && statsData?.urgentFocus === 0 ? (
                       <CheckCircle2 size={22} />
                     ) : (
                       <AlertTriangle size={22} className="animate-pulse" />
@@ -409,10 +409,10 @@ export default function DashboardPage() {
                       <div className="text-2xl font-bold text-neutral-text-primary">
                         <MetricValue
                           loading={loading}
-                          value={statsData?.priorityFocus ?? 0}
+                          value={statsData?.urgentFocus ?? 0}
                         />
                       </div>
-                      {!loading && statsData?.priorityFocus === 0 && (
+                      {!loading && statsData?.urgentFocus === 0 && (
                         <span className="rounded-full bg-ui-success/10 px-2 py-0.5 text-[10px] font-bold text-ui-success">
                           All Clear
                         </span>
@@ -424,7 +424,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <p className="mt-4 border-t border-neutral-border pt-4 text-xs leading-relaxed text-neutral-text-secondary">
-                  {!loading && statsData?.priorityFocus === 0
+                  {!loading && statsData?.urgentFocus === 0
                     ? 'Excellent! You have no high or urgent priority tickets in your queue.'
                     : 'These are High or Urgent priority tickets assigned to you that need immediate resolution.'}
                 </p>

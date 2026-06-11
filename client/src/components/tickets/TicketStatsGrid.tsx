@@ -9,7 +9,7 @@ export default function TicketStatsGrid({ stats }: TicketStatsGridProps) {
   if (!stats) return null;
 
   return (
-    <div className="animate-in fade-in slide-in-from-top-4 grid grid-cols-1 gap-2 duration-300 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="animate-in fade-in slide-in-from-top-4 grid grid-cols-1 gap-2 duration-300 sm:grid-cols-2 md:grid-cols-4">
       {/* Card 1: Open */}
       <div className="relative overflow-hidden rounded-premium-card border border-neutral-border bg-neutral-card p-2.5 shadow-premium-card transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
         <div className="flex items-center justify-between">
@@ -72,7 +72,7 @@ export default function TicketStatsGrid({ stats }: TicketStatsGridProps) {
               Urgent focus
             </p>
             <h3 className="text-lg font-bold text-neutral-text-primary">
-              {stats.urgentEscalations ?? 0}
+              {stats.urgentFocus ?? 0}
             </h3>
           </div>
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-ui-danger-light text-ui-danger">

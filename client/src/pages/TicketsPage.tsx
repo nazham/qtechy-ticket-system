@@ -7,16 +7,15 @@ import {
 import { useHasPermission } from '../hooks/useHasPermission';
 import { Permission } from '../constants/permissions';
 import CreateTicketModal from '../components/tickets/CreateTicketModal';
-import { useAppSelector } from '../store/hooks';
-import { selectUser } from '../store/slices/authSlice';
+import { useRoles } from '../hooks/useRoles';
 import { useTicketFilters } from '../hooks/useTicketFilters';
 import TicketStatsGrid from '../components/tickets/TicketStatsGrid';
 import TicketFilters from '../components/tickets/TicketFilters';
 import TicketTable from '../components/tickets/TicketTable';
 
 export default function TicketsPage() {
-  const currentUser = useAppSelector(selectUser);
-  const showAssignedColumn = currentUser?.role !== 'agent';
+  const { isAgent } = useRoles();
+  const showAssignedColumn = !isAgent;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const canCreate = useHasPermission(Permission.CreateTicket);
 

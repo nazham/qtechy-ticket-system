@@ -9,6 +9,7 @@ import connectDB from "./config/db";
 import { errorHandler } from "./middleware/errorHandler";
 import authRoutes from "./routes/authRoutes";
 import ticketRoutes from "./routes/ticketRoutes";
+import userRoutes from "./routes/userRoutes";
 
 const startServer = async () => {
   try {
@@ -31,6 +32,7 @@ const startServer = async () => {
     // Mount Routes
     app.use("/api/auth", authRoutes);
     app.use("/api/tickets", ticketRoutes);
+    app.use("/api/users", userRoutes);
 
     // Global Error Handler (must be after all routes)
     app.use(errorHandler);

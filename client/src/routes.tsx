@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import SettingsPage from './pages/SettingsPage';
 import TicketsPage from './pages/TicketsPage';
+import TicketDetailsPage from './pages/TicketDetailsPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import UsersPage from './pages/UsersPage';
 import { useAppSelector } from './store/hooks';
@@ -45,6 +46,7 @@ export const router = createBrowserRouter(
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/tickets" element={<TicketsPage />} />
+          <Route path="/tickets/:id" element={<TicketDetailsPage />} />
         </Route>
       </Route>
 

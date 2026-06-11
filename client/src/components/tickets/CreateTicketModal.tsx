@@ -1,9 +1,11 @@
+import { Loader2, X } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { X, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { useCreateTicketMutation } from '../../store/slices/ticketApi';
-import type { Ticket } from '../../store/slices/ticketApi';
 import { extractApiError } from '../../api/utils';
+import { TicketCategory, TicketPriority } from '../../constants/enums';
+import { useRoles } from '../../hooks/useRoles';
+import { useGetUsersQuery } from '../../store/slices/authApi';
+import { useCreateTicketMutation } from '../../store/slices/ticketApi';
 
 interface CreateTicketModalProps {
   isOpen: boolean;
@@ -16,19 +18,18 @@ export default function CreateTicketModal({
 }: CreateTicketModalProps) {
   const [createTicket, { isLoading }] = useCreateTicketMutation();
 
+  const { isAdmin } = useRoles();
+
+  const { data: assignees } = useGetUsersQuery(
+    { role: 'agent' },
+    { skip: !isAdmin || !isOpen }
+  );
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<
-    | 'Bug'
-    | 'Feature Request'
-    | 'Technical Issue'
-    | 'Payment Issue'
-    | 'Account Issue'
-    | 'Other'
-  >('Bug');
-  const [priority, setPriority] = useState<
-    'Low' | 'Medium' | 'High' | 'Urgent'
-  >('Low');
+  const [category, setCategory] = useState<TicketCategory>(TicketCategory.Bug);
+  const [priority, setPriority] = useState<TicketPriority>(TicketPriority.Low);
+  const [assignedTo, setAssignedTo] = useState('');
 
   // Form validation states
   const [errors, setErrors] = useState<{
@@ -68,14 +69,16 @@ export default function CreateTicketModal({
         description: description.trim(),
         category,
         priority,
+        assignedTo: isAdmin && assignedTo ? assignedTo : null,
       }).unwrap();
 
       toast.success('Ticket created successfully!');
       // Reset form
       setTitle('');
       setDescription('');
-      setCategory('Bug');
-      setPriority('Low');
+      setCategory(TicketCategory.Bug);
+      setPriority(TicketPriority.Low);
+      setAssignedTo('');
       setErrors({});
       onClose();
     } catch (err) {
@@ -181,17 +184,23 @@ export default function CreateTicketModal({
                 id="ticket-category"
                 disabled={isLoading}
                 value={category}
-                onChange={(e) =>
-                  setCategory(e.target.value as Ticket['category'])
-                }
+                onChange={(e) => setCategory(e.target.value as TicketCategory)}
                 className="w-full rounded-lg border border-neutral-border bg-neutral-bg/30 px-3.5 py-2 text-sm text-neutral-text-primary transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
               >
-                <option value="Bug">Bug</option>
-                <option value="Feature Request">Feature Request</option>
-                <option value="Technical Issue">Technical Issue</option>
-                <option value="Payment Issue">Payment Issue</option>
-                <option value="Account Issue">Account Issue</option>
-                <option value="Other">Other</option>
+                <option value={TicketCategory.Bug}>Bug</option>
+                <option value={TicketCategory.FeatureRequest}>
+                  Feature Request
+                </option>
+                <option value={TicketCategory.TechnicalIssue}>
+                  Technical Issue
+                </option>
+                <option value={TicketCategory.PaymentIssue}>
+                  Payment Issue
+                </option>
+                <option value={TicketCategory.AccountIssue}>
+                  Account Issue
+                </option>
+                <option value={TicketCategory.Other}>Other</option>
               </select>
             </div>
 
@@ -207,18 +216,42 @@ export default function CreateTicketModal({
                 id="ticket-priority"
                 disabled={isLoading}
                 value={priority}
-                onChange={(e) =>
-                  setPriority(e.target.value as Ticket['priority'])
-                }
+                onChange={(e) => setPriority(e.target.value as TicketPriority)}
                 className="w-full rounded-lg border border-neutral-border bg-neutral-bg/30 px-3.5 py-2 text-sm text-neutral-text-primary transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
               >
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Urgent">Urgent</option>
+                <option value={TicketPriority.Low}>Low</option>
+                <option value={TicketPriority.Medium}>Medium</option>
+                <option value={TicketPriority.High}>High</option>
+                <option value={TicketPriority.Urgent}>Urgent</option>
               </select>
             </div>
           </div>
+
+          {/* Assignee (Admin Only) */}
+          {isAdmin && (
+            <div>
+              <label
+                htmlFor="ticket-assignee"
+                className="mb-1 block text-sm font-medium text-neutral-text-secondary"
+              >
+                Assignee (Optional)
+              </label>
+              <select
+                id="ticket-assignee"
+                disabled={isLoading}
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full rounded-lg border border-neutral-border bg-neutral-bg/30 px-3.5 py-2 text-sm text-neutral-text-primary transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
+              >
+                <option value="">Unassigned</option>
+                {assignees?.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name} ({user.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Footer Actions */}
           <div className="mt-6 flex justify-end gap-3 border-t border-neutral-border pt-4">

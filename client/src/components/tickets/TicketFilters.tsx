@@ -1,4 +1,11 @@
-import { Search, Filter, AlertTriangle, Layers, X } from 'lucide-react';
+import {
+  Search,
+  Filter,
+  AlertTriangle,
+  Layers,
+  X,
+  FilterX,
+} from 'lucide-react';
 
 interface TicketFiltersProps {
   localSearch: string;
@@ -38,8 +45,8 @@ export default function TicketFilters({
     sortOrder === 'desc';
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-premium-card border border-neutral-border bg-neutral-card p-1.5 shadow-premium-card lg:flex-row lg:items-center lg:justify-between">
-      <div className="relative w-full lg:max-w-xs">
+    <div className="flex flex-col gap-1.5 rounded-premium-card border border-neutral-border bg-neutral-card p-1.5 shadow-premium-card md:flex-row md:items-center md:justify-between">
+      <div className="relative w-full md:max-w-xs">
         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <Search size={14} className="text-neutral-text-muted" />
         </div>
@@ -60,9 +67,9 @@ export default function TicketFilters({
           </button>
         )}
       </div>
-      <div className="flex w-full flex-wrap items-center gap-1.5 lg:w-auto">
+      <div className="flex w-full flex-wrap items-center gap-1.5 md:w-auto md:flex-nowrap">
         {/* Status filter */}
-        <div className="relative min-w-[130px] flex-1 sm:w-36 sm:flex-initial">
+        <div className="relative min-w-[120px] flex-1 sm:w-32 md:flex-initial">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Filter size={14} className="text-neutral-text-muted" />
           </div>
@@ -86,7 +93,7 @@ export default function TicketFilters({
         </div>
 
         {/* Priority filter */}
-        <div className="relative min-w-[130px] flex-1 sm:w-36 sm:flex-initial">
+        <div className="relative min-w-[120px] flex-1 sm:w-32 md:flex-initial">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <AlertTriangle size={14} className="text-neutral-text-muted" />
           </div>
@@ -110,7 +117,7 @@ export default function TicketFilters({
         </div>
 
         {/* Category filter */}
-        <div className="relative min-w-[130px] flex-1 sm:w-38 sm:flex-initial">
+        <div className="relative min-w-[120px] flex-1 sm:w-36 md:flex-initial">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Layers size={14} className="text-neutral-text-muted" />
           </div>
@@ -138,9 +145,11 @@ export default function TicketFilters({
         <button
           onClick={handleClearFilters}
           disabled={isClearDisabled}
-          className="btn-secondary px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40"
+          title="Clear Filters"
+          className="btn-secondary flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Clear Filters
+          <FilterX size={14} />
+          <span className="hidden md:inline">Clear</span>
         </button>
       </div>
     </div>

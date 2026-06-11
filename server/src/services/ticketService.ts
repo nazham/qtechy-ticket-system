@@ -39,9 +39,20 @@ export const createTicketService = async (
     description: string;
     category: TicketCategory;
     priority: TicketPriority;
+    assignedTo?: string | null;
   },
 ) => {
   const ticketNumber = generateTicketNumber();
+
+  if (ticketData.assignedTo) {
+    const assignee = await User.findById(ticketData.assignedTo);
+    if (!assignee) {
+      throw new AppError("Assignee user not found", 404);
+    }
+    if (assignee.role !== UserRole.Agent) {
+      throw new AppError("Only Agent users can be assigned to a ticket", 400);
+    }
+  }
 
   const newTicket = await Ticket.create({
     ticketNumber,
@@ -50,10 +61,16 @@ export const createTicketService = async (
     description: ticketData.description,
     category: ticketData.category,
     priority: ticketData.priority,
+    assignedTo: ticketData.assignedTo || null,
     // Status defaults to 'Open' via Mongoose schema
   });
 
-  return newTicket;
+  return await newTicket.populate([
+    { path: "createdBy", select: "name email" },
+    { path: "assignedTo", select: "name email" },
+    { path: "comments.user", select: "name email role" },
+    { path: "statusHistory.changedBy", select: "name" },
+  ]);
 };
 
 export const getTicketsService = async (
@@ -168,7 +185,11 @@ export const getTicketByIdService = async (
   userId: string,
   userRole: UserRole,
 ) => {
-  const ticket = await Ticket.findById(ticketId);
+  const ticket = await Ticket.findById(ticketId)
+    .populate("createdBy", "name email")
+    .populate("assignedTo", "name email")
+    .populate("comments.user", "name email role")
+    .populate("statusHistory.changedBy", "name");
   if (!ticket) {
     throw new AppError("Ticket not found", 404);
   }
@@ -177,11 +198,13 @@ export const getTicketByIdService = async (
   if (userPermissions.includes(Permission.ViewAllTickets)) {
     // Admin-level: can see any ticket, no ownership check needed
   } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
-    if (!ticket.assignedTo || ticket.assignedTo.toString() !== userId) {
+    const assignedId = (ticket.assignedTo as any)?._id?.toString() || ticket.assignedTo?.toString();
+    if (!assignedId || assignedId !== userId) {
       throw new AppError("Not authorized to access this ticket", 403);
     }
   } else {
-    if (ticket.createdBy.toString() !== userId) {
+    const creatorId = (ticket.createdBy as any)?._id?.toString() || ticket.createdBy?.toString();
+    if (creatorId !== userId) {
       throw new AppError("Not authorized to access this ticket", 403);
     }
   }
@@ -196,13 +219,22 @@ export const assignTicketService = async (ticketId: string, assignToUserId: stri
     if (!userExists) {
       throw new AppError("Assigned user not found", 404);
     }
+    // Verify that the user has the Agent role
+    const isAgent = await User.exists({ _id: assignToUserId, role: UserRole.Agent });
+    if (!isAgent) {
+      throw new AppError("Tickets can only be assigned to Agents", 400);
+    }
   }
 
   const ticket = await Ticket.findByIdAndUpdate(
     ticketId,
     { assignedTo: assignToUserId || null },
     { new: true, runValidators: true },
-  );
+  )
+    .populate("createdBy", "name email")
+    .populate("assignedTo", "name email")
+    .populate("comments.user", "name email role")
+    .populate("statusHistory.changedBy", "name");
   if (!ticket) {
     throw new AppError("Ticket not found", 404);
   }
@@ -215,12 +247,22 @@ export const updateTicketStatusService = async (
   userId: string,
   userRole: UserRole,
 ) => {
+  // Enforce that only Admins and Agents can update ticket status
+  if (userRole !== UserRole.Admin && userRole !== UserRole.Agent) {
+    throw new AppError("Only Admins and Agents can update ticket status", 403);
+  }
+
   // Ensure the user has access to this ticket
   const ticket = await getTicketByIdService(ticketId, userId, userRole);
 
   // Avoid redundant updates and history pollution if status is unchanged
   if (ticket.status === newStatus) {
     return ticket;
+  }
+
+  // An Agent must be assigned to the ticket before updating status to anything other than 'Closed'
+  if (!ticket.assignedTo && newStatus !== TicketStatus.Closed) {
+    throw new AppError("Ticket must be assigned to an Agent before updating status", 400);
   }
 
   ticket.status = newStatus;
@@ -230,7 +272,13 @@ export const updateTicketStatusService = async (
     changedAt: new Date(),
   });
 
-  return await ticket.save();
+  const savedTicket = await ticket.save();
+  return await savedTicket.populate([
+    { path: "createdBy", select: "name email" },
+    { path: "assignedTo", select: "name email" },
+    { path: "comments.user", select: "name email role" },
+    { path: "statusHistory.changedBy", select: "name" },
+  ]);
 };
 
 export const addCommentService = async (
@@ -248,7 +296,13 @@ export const addCommentService = async (
     createdAt: new Date(),
   });
 
-  return await ticket.save();
+  const savedTicket = await ticket.save();
+  return await savedTicket.populate([
+    { path: "createdBy", select: "name email" },
+    { path: "assignedTo", select: "name email" },
+    { path: "comments.user", select: "name email role" },
+    { path: "statusHistory.changedBy", select: "name" },
+  ]);
 };
 
 const mapRecentTickets = (tickets: ITicket[]) => {
@@ -327,8 +381,7 @@ export const getTicketStatisticsService = async (
   let totalUsers: number | undefined = undefined;
   let triageBacklog: number | undefined = undefined;
   let categoryDistribution: Record<string, number> | undefined = undefined;
-  let urgentEscalations: number | undefined = undefined;
-  let priorityFocus: number | undefined = undefined;
+  let urgentFocus: number | undefined = undefined;
   let recentTickets: any[] | undefined = undefined;
 
   const userPermissions = ROLE_PERMISSIONS[userRole] || [];
@@ -349,7 +402,7 @@ export const getTicketStatisticsService = async (
 
     totalUsers = usersCount;
     triageBacklog = backlogCount;
-    urgentEscalations = escalationsCount;
+    urgentFocus = escalationsCount;
 
     categoryDistribution = {
       [TicketCategory.Bug]: 0,
@@ -379,7 +432,7 @@ export const getTicketStatisticsService = async (
         .limit(5),
     ]);
 
-    priorityFocus = focusCount;
+    urgentFocus = focusCount;
     recentTickets = mapRecentTickets(agentTickets);
   } else {
     // User metrics
@@ -396,8 +449,7 @@ export const getTicketStatisticsService = async (
     totalUsers,
     triageBacklog,
     categoryDistribution,
-    urgentEscalations,
-    priorityFocus,
+    urgentFocus,
     recentTickets,
   };
 };
