@@ -41,7 +41,9 @@ export default function TicketDetailsPage() {
   if (isLoading) {
     pageTitle = 'Loading Ticket...';
   } else if (error || !ticket) {
-    pageTitle = 'Failed to Load Ticket';
+    pageTitle = error
+      ? extractApiError(error, 'Failed to Load Ticket')
+      : 'Ticket Not Found';
   } else if (ticket) {
     pageTitle = `Ticket #${ticket.ticketNumber}: ${ticket.title}`;
   }
@@ -68,10 +70,14 @@ export default function TicketDetailsPage() {
   }
 
   if (error || !ticket) {
+    const errorMessage = error
+      ? extractApiError(error, 'Failed to load ticket')
+      : 'Ticket not found';
+
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4 text-red-500">
         <AlertCircle size={32} />
-        <h2 className="text-xl font-bold">Failed to load ticket</h2>
+        <h2 className="text-xl font-bold text-center px-4">{errorMessage}</h2>
         <button onClick={() => navigate('/tickets')} className="btn-secondary">
           Go back to tickets
         </button>

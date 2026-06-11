@@ -16,6 +16,8 @@ import { useHasPermission } from '../hooks/useHasPermission';
 import { Permission } from '../constants/permissions';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
+import { extractApiError } from '../api/utils';
+
 const MetricValue = ({
   loading,
   value,
@@ -37,8 +39,19 @@ export default function DashboardPage() {
     data: statsData,
     isLoading,
     isFetching,
+    error,
   } = useGetTicketStatisticsQuery();
   const loading = isLoading || isFetching;
+
+  if (error) {
+    const errorMessage = extractApiError(error, 'Failed to load dashboard statistics');
+    return (
+      <div className="flex h-64 flex-col items-center justify-center gap-4 text-red-500">
+        <AlertTriangle size={32} />
+        <h2 className="text-xl font-bold text-center px-4">{errorMessage}</h2>
+      </div>
+    );
+  }
 
   const hasCategoryData =
     statsData?.categoryDistribution &&

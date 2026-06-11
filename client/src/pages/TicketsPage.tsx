@@ -62,6 +62,7 @@ export default function TicketsPage() {
     data: response,
     isLoading,
     isError,
+    error,
     refetch,
     isFetching,
   } = useGetTicketsQuery({
@@ -137,6 +138,7 @@ export default function TicketsPage() {
         pagination={pagination}
         isLoading={isLoading}
         isError={isError}
+        error={error}
         isFetching={isFetching}
         refetch={refetch}
         showAssignedColumn={showAssignedColumn}

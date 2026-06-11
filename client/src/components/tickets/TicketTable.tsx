@@ -11,12 +11,14 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { GetTicketsResponse, Ticket } from '../../store/slices/ticketApi';
+import { extractApiError } from '../../api/utils';
 
 interface TicketTableProps {
   tickets?: Ticket[];
   pagination?: GetTicketsResponse['pagination'];
   isLoading: boolean;
   isError: boolean;
+  error?: any;
   isFetching: boolean;
   refetch: () => void;
   showAssignedColumn: boolean;
@@ -35,6 +37,7 @@ export default function TicketTable({
   pagination,
   isLoading,
   isError,
+  error,
   isFetching,
   refetch,
   showAssignedColumn,
@@ -192,7 +195,7 @@ export default function TicketTable({
           size={48}
         />
         <h3 className="text-lg font-bold text-neutral-text-primary">
-          Failed to load tickets
+          {error ? extractApiError(error, 'Failed to load tickets') : 'Failed to load tickets'}
         </h3>
         <p className="mt-1 text-sm text-neutral-text-secondary">
           There was an error communicating with the server. Please check your
