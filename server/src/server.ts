@@ -7,6 +7,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import connectDB from "./config/db";
 import { errorHandler } from "./middleware/errorHandler";
+import adminRoutes from "./routes/adminRoutes";
 import authRoutes from "./routes/authRoutes";
 import ticketRoutes from "./routes/ticketRoutes";
 import userRoutes from "./routes/userRoutes";
@@ -33,6 +34,7 @@ const startServer = async () => {
     app.use("/api/auth", authRoutes);
     app.use("/api/tickets", ticketRoutes);
     app.use("/api/users", userRoutes);
+    app.use("/api/admin", adminRoutes);
 
     // Global Error Handler (must be after all routes)
     app.use(errorHandler);
