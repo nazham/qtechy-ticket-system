@@ -9,6 +9,7 @@ import {
   updateTicketStatusService,
   getTicketStatisticsService,
 } from "../services/ticketService";
+import { GetTicketsQueryInput } from "../validators/ticketValidators";
 
 // @desc    Create new ticket
 // @route   POST /api/tickets
@@ -39,12 +40,12 @@ export const getTickets = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { searchTerm, status, priority, sortBy, sortOrder, page, limit } = req.query as any;
+    const { searchTerm, status, priority, category, sortBy, sortOrder, page, limit } = req.query as GetTicketsQueryInput;
 
     const { tickets, pagination } = await getTicketsService(
       req.user!._id.toString(),
       req.user!.role,
-      { page, limit, searchTerm, status, priority, sortBy, sortOrder },
+      { page, limit, searchTerm, status, priority, category, sortBy, sortOrder },
     );
 
     res.status(200).json({

@@ -227,8 +227,8 @@ export default function MainLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="mx-auto max-w-7xl">
+        <main className="flex-1 overflow-y-auto p-3">
+          <div className="mx-auto w-full max-w-none px-2">
             <Outlet />
           </div>
         </main>

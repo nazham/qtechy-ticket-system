@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import {
   Permission,
   ROLE_PERMISSIONS,
@@ -11,6 +11,20 @@ import {
 import { AppError } from "../middleware/errorHandler";
 import Ticket, { ITicket, IComment, IStatusHistory } from "../models/Ticket";
 import User from "../models/User";
+
+const getBaseRbacQuery = (userId: string, userRole: UserRole) => {
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+  if (userPermissions.includes(Permission.ViewAllTickets)) {
+    // Admins see everything
+    return {};
+  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
+    // Agents see tickets assigned to them
+    return { assignedTo: new Types.ObjectId(userId) };
+  } else {
+    // Users only see their own tickets
+    return { createdBy: new Types.ObjectId(userId) };
+  }
+};
 
 const generateTicketNumber = (): string => {
   // Generates a string like TKT-A8F2B
@@ -51,6 +65,7 @@ export const getTicketsService = async (
     searchTerm?: string;
     status?: TicketStatus;
     priority?: TicketPriority;
+    category?: TicketCategory;
     sortBy?: string;
     sortOrder?: string;
   },
@@ -59,25 +74,14 @@ export const getTicketsService = async (
   const limit = Math.max(1, Math.min(100, options?.limit || 10));
   const skip = (page - 1) * limit;
 
-  let rbacQuery: any = {};
-  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
-  if (userPermissions.includes(Permission.ViewAllTickets)) {
-    // Admins see everything
-    rbacQuery = {};
-  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
-    // Agents see tickets assigned to them
-    rbacQuery = { assignedTo: userId };
-  } else {
-    // Users only see their own tickets
-    rbacQuery = { createdBy: userId };
-  }
+  const rbacQuery = getBaseRbacQuery(userId, userRole);
 
   const filters: any = {};
   if (options?.searchTerm) {
     const escapedSearchTerm = options.searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     filters.$or = [
-      { title: { $regex: escapedSearchTerm, $options: "i" } },
-      { ticketNumber: { $regex: escapedSearchTerm, $options: "i" } },
+      { title: mongoose.trusted({ $regex: escapedSearchTerm, $options: "i" }) },
+      { ticketNumber: mongoose.trusted({ $regex: escapedSearchTerm, $options: "i" }) },
     ];
   }
   if (options?.status) {
@@ -86,8 +90,22 @@ export const getTicketsService = async (
   if (options?.priority) {
     filters.priority = options.priority;
   }
+  if (options?.category) {
+    filters.category = options.category;
+  }
 
-  const query = { ...rbacQuery, ...filters };
+  const query: any = {};
+  const andClauses = [];
+  if (Object.keys(rbacQuery).length > 0) {
+    andClauses.push(rbacQuery);
+  }
+  if (Object.keys(filters).length > 0) {
+    andClauses.push(filters);
+  }
+  
+  if (andClauses.length > 0) {
+    query.$and = andClauses;
+  }
 
   let sortOptions: any = { createdAt: -1 };
   if (options?.sortBy) {
@@ -95,11 +113,42 @@ export const getTicketsService = async (
     sortOptions = { [options.sortBy]: order };
   }
 
-  const tickets = await Ticket.find(query)
-    .populate("createdBy", "name email")
-    .sort(sortOptions)
-    .skip(skip)
-    .limit(limit);
+  let tickets: any[];
+  if (options?.sortBy === "priority") {
+    const order = options.sortOrder === "asc" || options.sortOrder === "1" ? 1 : -1;
+    const rawTickets = await Ticket.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          priorityOrder: {
+            $switch: {
+              branches: [
+                { case: { $eq: ["$priority", "Urgent"] }, then: 4 },
+                { case: { $eq: ["$priority", "High"] }, then: 3 },
+                { case: { $eq: ["$priority", "Medium"] }, then: 2 },
+                { case: { $eq: ["$priority", "Low"] }, then: 1 }
+              ],
+              default: 0
+            }
+          }
+        }
+      },
+      { $sort: { priorityOrder: order, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit }
+    ]);
+    tickets = await Ticket.populate(rawTickets, [
+      { path: "createdBy", select: "name email" },
+      { path: "assignedTo", select: "name email" },
+    ]);
+  } else {
+    tickets = await Ticket.find(query)
+      .populate("createdBy", "name email")
+      .populate("assignedTo", "name email")
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit);
+  }
 
   const total = await Ticket.countDocuments(query);
 
@@ -242,18 +291,7 @@ export const getTicketStatisticsService = async (
   userId: string,
   userRole: UserRole,
 ) => {
-  let query = {};
-  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
-  if (userPermissions.includes(Permission.ViewAllTickets)) {
-    // Admins see everything
-    query = {};
-  } else if (userPermissions.includes(Permission.ViewAssignedTickets)) {
-    // Agents see tickets assigned to them
-    query = { assignedTo: new Types.ObjectId(userId) };
-  } else {
-    // Users only see their own tickets
-    query = { createdBy: new Types.ObjectId(userId) };
-  }
+  const query = getBaseRbacQuery(userId, userRole);
 
   // Common: status counts
   const statusCounts = await Ticket.aggregate([
@@ -293,6 +331,7 @@ export const getTicketStatisticsService = async (
   let priorityFocus: number | undefined = undefined;
   let recentTickets: any[] | undefined = undefined;
 
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
   if (userPermissions.includes(Permission.ManageUsers)) {
     // Admin metrics (run concurrently for best performance)
     const [usersCount, backlogCount, catCounts, escalationsCount] = await Promise.all([

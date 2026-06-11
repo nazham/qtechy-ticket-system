@@ -104,7 +104,7 @@ body {
   gap: 0.5rem;
   font-weight: 600;
   font-size: 0.875rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.45rem 1rem;
   border-radius: var(--radius-premium-btn);
   background-color: var(--color-ui-accent);
   color: #ffffff;
@@ -136,7 +136,7 @@ body {
   gap: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
-  padding: 0.625rem 1.25rem;
+  padding: 0.45rem 1rem;
   border-radius: var(--radius-premium-btn);
   background-color: var(--color-ui-card);
   color: var(--color-ui-text-primary);
@@ -151,6 +151,40 @@ body {
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+}
+
+@utility input-field {
+  display: block;
+  width: 100%;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-premium-btn);
+  background-color: var(--color-ui-card);
+  color: var(--color-ui-text-primary);
+  border: 1px solid var(--color-ui-border);
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+
+  &::placeholder {
+    color: var(--color-ui-text-muted);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-ui-text-muted);
+  }
+
+  &:focus:not(:disabled) {
+    border-color: var(--color-ui-accent);
+    box-shadow: 0 0 0 2px var(--color-ui-accent-light);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--color-ui-bg);
   }
 }
 

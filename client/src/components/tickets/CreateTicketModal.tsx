@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { X, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useCreateTicketMutation } from '../../store/slices/ticketApi';
+import type { Ticket } from '../../store/slices/ticketApi';
 import { extractApiError } from '../../api/utils';
 
 interface CreateTicketModalProps {
@@ -180,7 +181,9 @@ export default function CreateTicketModal({
                 id="ticket-category"
                 disabled={isLoading}
                 value={category}
-                onChange={(e) => setCategory(e.target.value as any)}
+                onChange={(e) =>
+                  setCategory(e.target.value as Ticket['category'])
+                }
                 className="w-full rounded-lg border border-neutral-border bg-neutral-bg/30 px-3.5 py-2 text-sm text-neutral-text-primary transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
               >
                 <option value="Bug">Bug</option>
@@ -204,7 +207,9 @@ export default function CreateTicketModal({
                 id="ticket-priority"
                 disabled={isLoading}
                 value={priority}
-                onChange={(e) => setPriority(e.target.value as any)}
+                onChange={(e) =>
+                  setPriority(e.target.value as Ticket['priority'])
+                }
                 className="w-full rounded-lg border border-neutral-border bg-neutral-bg/30 px-3.5 py-2 text-sm text-neutral-text-primary transition-colors outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent disabled:opacity-50"
               >
                 <option value="Low">Low</option>

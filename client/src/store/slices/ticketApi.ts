@@ -2,6 +2,7 @@ import { apiSlice } from '../apiSlice';
 
 export interface Ticket {
   _id: string;
+  ticketNumber: string;
   title: string;
   description: string;
   category:
@@ -13,8 +14,20 @@ export interface Ticket {
     | 'Other';
   status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
-  assignedTo?: string;
-  createdBy: string;
+  assignedTo?:
+    | {
+        _id: string;
+        name: string;
+        email: string;
+      }
+    | string;
+  createdBy:
+    | {
+        _id: string;
+        name: string;
+        email: string;
+      }
+    | string;
   createdAt: string;
   updatedAt: string;
 }
@@ -48,9 +61,26 @@ export interface TicketStatistics {
   }>;
 }
 
-interface GetTicketsResponse {
+export interface GetTicketsParams {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  status?: string;
+  priority?: string;
+  category?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc' | '1' | '-1';
+}
+
+export interface GetTicketsResponse {
   success: boolean;
   count: number;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
   data: Ticket[];
 }
 
@@ -66,13 +96,29 @@ interface GetTicketStatisticsResponse {
 
 export const ticketApi = apiSlice.injectEndpoints({
   endpoints: (build) => ({
-    getTickets: build.query<Ticket[], void>({
-      query: () => '/tickets',
-      transformResponse: (response: GetTicketsResponse) => response.data,
+    getTickets: build.query<GetTicketsResponse, GetTicketsParams | void>({
+      query: (params) => {
+        if (!params) return '/tickets';
+
+        const query = new URLSearchParams();
+        if (params.page !== undefined)
+          query.append('page', params.page.toString());
+        if (params.limit !== undefined)
+          query.append('limit', params.limit.toString());
+        if (params.searchTerm) query.append('searchTerm', params.searchTerm);
+        if (params.status) query.append('status', params.status);
+        if (params.priority) query.append('priority', params.priority);
+        if (params.category) query.append('category', params.category);
+        if (params.sortBy) query.append('sortBy', params.sortBy);
+        if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+
+        const queryString = query.toString();
+        return queryString ? `/tickets?${queryString}` : '/tickets';
+      },
       providesTags: (result) =>
-        result
+        result?.data
           ? [
-              ...result.map(({ _id }) => ({
+              ...result.data.map(({ _id }) => ({
                 type: 'Ticket' as const,
                 id: _id,
               })),

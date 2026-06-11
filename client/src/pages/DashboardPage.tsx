@@ -339,7 +339,7 @@ export default function DashboardPage() {
                 <div className="space-y-4">
                   {statsData?.categoryDistribution &&
                     Object.entries(statsData.categoryDistribution)
-                      .filter(([_, count]) => count > 0)
+                      .filter(([, count]) => count > 0)
                       .sort((a, b) => b[1] - a[1])
                       .slice(0, 5)
                       .map(([category, count]) => {
