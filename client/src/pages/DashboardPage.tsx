@@ -44,11 +44,14 @@ export default function DashboardPage() {
   const loading = isLoading || isFetching;
 
   if (error) {
-    const errorMessage = extractApiError(error, 'Failed to load dashboard statistics');
+    const errorMessage = extractApiError(
+      error,
+      'Failed to load dashboard statistics'
+    );
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4 text-red-500">
         <AlertTriangle size={32} />
-        <h2 className="text-xl font-bold text-center px-4">{errorMessage}</h2>
+        <h2 className="px-4 text-center text-xl font-bold">{errorMessage}</h2>
       </div>
     );
   }

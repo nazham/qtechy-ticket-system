@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   AlertTriangle,
   ChevronDown,
@@ -8,10 +9,17 @@ import {
   Plus,
   RefreshCw,
   Ticket as TicketIcon,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { GetTicketsResponse, Ticket } from '../../store/slices/ticketApi';
+import { useDeleteTicketMutation } from '../../store/slices/ticketApi';
 import { extractApiError } from '../../api/utils';
+import { useRoles } from '../../hooks/useRoles';
+import TicketFormModal from './TicketFormModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
+import { toast } from 'react-toastify';
 
 interface TicketTableProps {
   tickets?: Ticket[];
@@ -50,6 +58,38 @@ export default function TicketTable({
   urlSearchTerm,
   statusFilter,
 }: TicketTableProps) {
+  const { isAdmin } = useRoles();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
+  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
+
+  const handleEditClick = (e: React.MouseEvent, ticket: Ticket) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedTicket(ticket);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, ticket: Ticket) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedTicket(ticket);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedTicket) return;
+    try {
+      await deleteTicket(selectedTicket._id).unwrap();
+      toast.success('Ticket deleted successfully');
+      setIsDeleteModalOpen(false);
+      setSelectedTicket(null);
+    } catch (err) {
+      toast.error(extractApiError(err, 'Failed to delete ticket'));
+    }
+  };
   // Sort Icon Helper function (called during render, not a React component)
   const renderSortIcon = (field: string) => {
     if (sortBy !== field) {
@@ -195,7 +235,9 @@ export default function TicketTable({
           size={48}
         />
         <h3 className="text-lg font-bold text-neutral-text-primary">
-          {error ? extractApiError(error, 'Failed to load tickets') : 'Failed to load tickets'}
+          {error
+            ? extractApiError(error, 'Failed to load tickets')
+            : 'Failed to load tickets'}
         </h3>
         <p className="mt-1 text-sm text-neutral-text-secondary">
           There was an error communicating with the server. Please check your
@@ -294,6 +336,11 @@ export default function TicketTable({
                   Date Created {renderSortIcon('createdAt')}
                 </div>
               </th>
+              {isAdmin && (
+                <th className="px-3 py-2 text-center text-xs font-semibold tracking-wider whitespace-nowrap text-neutral-text-secondary uppercase">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-border">
@@ -407,6 +454,27 @@ export default function TicketTable({
                     });
                   })()}
                 </td>
+                {/* Actions */}
+                {isAdmin && (
+                  <td className="px-3 py-2 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={(e) => handleEditClick(e, ticket)}
+                        className="rounded-md p-1 text-neutral-text-muted transition-colors hover:bg-neutral-bg hover:text-brand-accent"
+                        title="Edit Ticket"
+                      >
+                        <Edit size={14} />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(e, ticket)}
+                        className="rounded-md p-1 text-neutral-text-muted transition-colors hover:bg-neutral-bg hover:text-ui-danger"
+                        title="Delete Ticket"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -493,6 +561,31 @@ export default function TicketTable({
             </button>
           </div>
         </div>
+      )}
+      {/* Edit Ticket Modal */}
+      {isAdmin && selectedTicket && (
+        <TicketFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedTicket(null);
+          }}
+          ticket={selectedTicket}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isAdmin && selectedTicket && (
+        <ConfirmDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setSelectedTicket(null);
+          }}
+          onConfirm={handleDeleteConfirm}
+          isLoading={isDeleting}
+          ticketNumber={selectedTicket.ticketNumber}
+        />
       )}
     </div>
   );

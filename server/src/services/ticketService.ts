@@ -453,3 +453,60 @@ export const getTicketStatisticsService = async (
     recentTickets,
   };
 };
+
+export const updateTicketService = async (
+  ticketId: string,
+  updateData: {
+    title?: string;
+    description?: string;
+    category?: TicketCategory;
+    priority?: TicketPriority;
+    assignedTo?: string | null;
+  },
+  userId: string,
+  userRole: UserRole,
+) => {
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+  if (!userPermissions.includes(Permission.UpdateTicket)) {
+    throw new AppError("Only admins are authorized to update ticket details", 403);
+  }
+
+  const ticket = await Ticket.findById(ticketId);
+  if (!ticket) {
+    throw new AppError("Ticket not found", 404);
+  }
+
+  // Apply updates
+  if (updateData.title !== undefined) ticket.title = updateData.title;
+  if (updateData.description !== undefined) ticket.description = updateData.description;
+  if (updateData.category !== undefined) ticket.category = updateData.category;
+  if (updateData.priority !== undefined) ticket.priority = updateData.priority;
+  if (updateData.assignedTo !== undefined) {
+    ticket.assignedTo = updateData.assignedTo ? new Types.ObjectId(updateData.assignedTo) as any : null;
+  }
+
+  await ticket.save();
+
+  return Ticket.findById(ticketId)
+    .populate("createdBy", "name email")
+    .populate("assignedTo", "name email")
+    .populate("comments.user", "name email role")
+    .populate("statusHistory.changedBy", "name");
+};
+
+export const deleteTicketService = async (
+  ticketId: string,
+  userRole: UserRole,
+) => {
+  const userPermissions = ROLE_PERMISSIONS[userRole] || [];
+  if (!userPermissions.includes(Permission.DeleteTicket)) {
+    throw new AppError("Only admins are authorized to delete tickets", 403);
+  }
+
+  const ticket = await Ticket.findByIdAndDelete(ticketId);
+  if (!ticket) {
+    throw new AppError("Ticket not found", 404);
+  }
+
+  return ticket;
+};

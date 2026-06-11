@@ -1,29 +1,35 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  Hash,
-  Flag,
-  Layers,
-  AlertCircle,
-  User,
-  ChevronDown,
-} from 'lucide-react';
-import {
-  useGetTicketQuery,
-  useUpdateTicketStatusMutation,
-  useAssignTicketMutation,
-  type Ticket,
-} from '../store/slices/ticketApi';
-import { useGetUsersQuery } from '../store/slices/authApi';
-import TicketHistoryTimeline from '../components/tickets/TicketHistoryTimeline';
-import TicketComments from '../components/tickets/TicketComments';
-import CategoryBadge from '../components/tickets/CategoryBadge';
-import { useRoles } from '../hooks/useRoles';
 import { format } from 'date-fns';
+import {
+  AlertCircle,
+  ArrowLeft,
+  ChevronDown,
+  Edit,
+  Flag,
+  Hash,
+  Layers,
+  Trash2,
+  User,
+} from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { extractApiError } from '../api/utils';
-import { TicketStatus, TicketPriority } from '../constants/enums';
+import CategoryBadge from '../components/tickets/CategoryBadge';
+import ConfirmDeleteModal from '../components/tickets/ConfirmDeleteModal';
+import TicketComments from '../components/tickets/TicketComments';
+import TicketFormModal from '../components/tickets/TicketFormModal';
+import TicketHistoryTimeline from '../components/tickets/TicketHistoryTimeline';
+import { TicketPriority, TicketStatus } from '../constants/enums';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { useRoles } from '../hooks/useRoles';
+import { useGetUsersQuery } from '../store/slices/authApi';
+import {
+  useAssignTicketMutation,
+  useDeleteTicketMutation,
+  useGetTicketQuery,
+  useUpdateTicketStatusMutation,
+  type Ticket,
+} from '../store/slices/ticketApi';
 
 export default function TicketDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,6 +59,9 @@ export default function TicketDetailsPage() {
   const [updateStatus, { isLoading: isUpdatingStatus }] =
     useUpdateTicketStatusMutation();
   const [assignTicket, { isLoading: isAssigning }] = useAssignTicketMutation();
+  const [deleteTicket, { isLoading: isDeleting }] = useDeleteTicketMutation();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const { isAdmin, isStaff } = useRoles();
 
@@ -77,7 +86,7 @@ export default function TicketDetailsPage() {
     return (
       <div className="flex h-64 flex-col items-center justify-center gap-4 text-red-500">
         <AlertCircle size={32} />
-        <h2 className="text-xl font-bold text-center px-4">{errorMessage}</h2>
+        <h2 className="px-4 text-center text-xl font-bold">{errorMessage}</h2>
         <button onClick={() => navigate('/tickets')} className="btn-secondary">
           Go back to tickets
         </button>
@@ -113,6 +122,18 @@ export default function TicketDetailsPage() {
       await assignTicket({ id: ticket._id, assignedTo: value }).unwrap();
     } catch (err) {
       toast.error(extractApiError(err, 'Failed to update assignee'));
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!ticket) return;
+    try {
+      await deleteTicket(ticket._id).unwrap();
+      toast.success('Ticket deleted successfully');
+      setIsDeleteModalOpen(false);
+      navigate('/tickets');
+    } catch (err) {
+      toast.error(extractApiError(err, 'Failed to delete ticket'));
     }
   };
 
@@ -164,38 +185,61 @@ export default function TicketDetailsPage() {
     <div className="flex min-h-0 flex-col gap-4 lg:h-[calc(100vh-5.5rem)] lg:flex-row lg:overflow-hidden">
       {/* Main Content Area */}
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:h-full lg:overflow-hidden">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/tickets')}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-border bg-neutral-card text-neutral-text-secondary shadow-sm transition-all hover:scale-105 hover:border-brand-accent/30 hover:bg-neutral-card-hover hover:text-brand-accent"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <div className="flex flex-col">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="rounded bg-brand-accent-light px-2 py-0.5 text-xs font-bold text-brand-accent">
-                #{ticket.ticketNumber}
-              </span>
-              <h1 className="text-2xl font-bold tracking-tight text-neutral-text-primary">
-                {ticket.title}
-              </h1>
-            </div>
-            <div className="mt-1.5 flex items-center gap-2 text-sm text-neutral-text-secondary">
-              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-accent-light text-[10px] font-bold text-brand-accent select-none">
-                {creatorName.charAt(0).toUpperCase()}
-              </div>
-              <span>
-                Opened by{' '}
-                <span className="font-semibold text-neutral-text-primary">
-                  {creatorName}
-                </span>{' '}
-                on{' '}
-                <span className="font-medium">
-                  {format(new Date(ticket.createdAt), 'MMM d, yyyy')}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/tickets')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-border bg-neutral-card text-neutral-text-secondary shadow-sm transition-all hover:scale-105 hover:border-brand-accent/30 hover:bg-neutral-card-hover hover:text-brand-accent"
+            >
+              <ArrowLeft size={16} />
+            </button>
+            <div className="flex flex-col">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="rounded bg-brand-accent-light px-2 py-0.5 text-xs font-bold text-brand-accent">
+                  #{ticket.ticketNumber}
                 </span>
-              </span>
+                <h1 className="text-2xl font-bold tracking-tight text-neutral-text-primary">
+                  {ticket.title}
+                </h1>
+              </div>
+              <div className="mt-1.5 flex items-center gap-2 text-sm text-neutral-text-secondary">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-accent-light text-[10px] font-bold text-brand-accent select-none">
+                  {creatorName.charAt(0).toUpperCase()}
+                </div>
+                <span>
+                  Opened by{' '}
+                  <span className="font-semibold text-neutral-text-primary">
+                    {creatorName}
+                  </span>{' '}
+                  on{' '}
+                  <span className="font-medium">
+                    {format(new Date(ticket.createdAt), 'MMM d, yyyy')}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Action buttons (Edit & Delete) */}
+          {isAdmin && (
+            <div className="flex items-center gap-2 self-end sm:self-center">
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="btn-secondary flex items-center gap-1 px-3 py-1.5 text-xs"
+              >
+                <Edit size={14} />
+                Edit
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="btn-danger flex items-center gap-1 px-3 py-1.5 text-xs"
+                disabled={isDeleting}
+              >
+                <Trash2 size={14} />
+                Delete
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Description Card */}
@@ -391,6 +435,26 @@ export default function TicketDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Ticket Modal */}
+      {isAdmin && (
+        <TicketFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          ticket={ticket}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isAdmin && (
+        <ConfirmDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteConfirm}
+          isLoading={isDeleting}
+          ticketNumber={ticket.ticketNumber}
+        />
+      )}
     </div>
   );
 }

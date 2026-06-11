@@ -8,6 +8,8 @@ import {
   getTickets,
   updateTicketStatus,
   getTicketStatistics,
+  updateTicket,
+  deleteTicket,
 } from "../controllers/ticketController";
 import { authorizePermissions, protect } from "../middleware/authMiddleware";
 import { validate, validateQuery } from "../middleware/validate";
@@ -17,6 +19,7 @@ import {
   createTicketSchema,
   getTicketsQuerySchema,
   updateTicketStatusSchema,
+  updateTicketSchema,
 } from "../validators/ticketValidators";
 
 const router = Router();
@@ -31,7 +34,11 @@ router
 
 router.get("/statistics", authorizePermissions(Permission.ViewDashboard), getTicketStatistics);
 
-router.get("/:id", getTicket);
+router
+  .route("/:id")
+  .get(getTicket)
+  .put(authorizePermissions(Permission.UpdateTicket), validate(updateTicketSchema), updateTicket)
+  .delete(authorizePermissions(Permission.DeleteTicket), deleteTicket);
 
 router.put(
   "/:id/assign",

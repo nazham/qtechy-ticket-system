@@ -6,7 +6,7 @@ import {
 } from '../store/slices/ticketApi';
 import { useHasPermission } from '../hooks/useHasPermission';
 import { Permission } from '../constants/permissions';
-import CreateTicketModal from '../components/tickets/CreateTicketModal';
+import TicketFormModal from '../components/tickets/TicketFormModal';
 import { useRoles } from '../hooks/useRoles';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useTicketFilters } from '../hooks/useTicketFilters';
@@ -24,10 +24,12 @@ export default function TicketsPage() {
   let pageDescription = 'View, track, and manage customer support requests.';
   if (isAdmin) {
     pageTitle = 'All Tickets';
-    pageDescription = 'View, track, and manage all customer support requests across the organization.';
+    pageDescription =
+      'View, track, and manage all customer support requests across the organization.';
   } else if (isAgent) {
     pageTitle = 'Assigned Tickets';
-    pageDescription = 'View and manage customer support requests assigned to you.';
+    pageDescription =
+      'View and manage customer support requests assigned to you.';
   } else if (isUser) {
     pageTitle = 'My Tickets';
     pageDescription = 'View, track, and manage your Tickets.';
@@ -154,7 +156,7 @@ export default function TicketsPage() {
 
       {/* Create Modal Popup */}
       {canCreate && (
-        <CreateTicketModal
+        <TicketFormModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

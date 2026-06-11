@@ -9,6 +9,8 @@ export const Permission = {
   ManageUsers: 'users:manage',
   ViewSettings: 'settings:view',
   ViewDashboard: 'dashboard:view',
+  UpdateTicket: 'tickets:update',
+  DeleteTicket: 'tickets:delete',
 } as const;
 
 export type PermissionValue = (typeof Permission)[keyof typeof Permission];

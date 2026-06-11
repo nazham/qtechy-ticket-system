@@ -18,6 +18,8 @@ export enum Permission {
   ManageUsers = "users:manage",
   ViewSettings = "settings:view",
   ViewDashboard = "dashboard:view",
+  UpdateTicket = "tickets:update",
+  DeleteTicket = "tickets:delete",
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -30,6 +32,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.ManageUsers,
     Permission.ViewSettings,
     Permission.ViewDashboard,
+    Permission.UpdateTicket,
+    Permission.DeleteTicket,
   ],
   [UserRole.Agent]: [
     Permission.ViewAssignedTickets,

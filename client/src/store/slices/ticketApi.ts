@@ -125,6 +125,11 @@ export interface AddCommentPayload {
   message: string;
 }
 
+export interface UpdateTicketPayload {
+  id: string;
+  updates: Partial<CreateTicketPayload>;
+}
+
 export const ticketApi = apiSlice.injectEndpoints({
   endpoints: (build) => ({
     getTickets: build.query<GetTicketsResponse, GetTicketsParams | void>({
@@ -238,6 +243,31 @@ export const ticketApi = apiSlice.injectEndpoints({
         { type: 'Ticket', id },
       ],
     }),
+
+    updateTicket: build.mutation<Ticket, UpdateTicketPayload>({
+      query: ({ id, updates }) => ({
+        url: `/tickets/${id}`,
+        method: 'PUT',
+        body: updates,
+      }),
+      transformResponse: (response: GetTicketResponse) => response.data,
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Ticket', id },
+        { type: 'Ticket', id: 'LIST' },
+        { type: 'Ticket', id: 'STATISTICS' },
+      ],
+    }),
+
+    deleteTicket: build.mutation<{ success: boolean }, string>({
+      query: (id) => ({
+        url: `/tickets/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [
+        { type: 'Ticket', id: 'LIST' },
+        { type: 'Ticket', id: 'STATISTICS' },
+      ],
+    }),
   }),
 });
 
@@ -249,4 +279,6 @@ export const {
   useUpdateTicketStatusMutation,
   useAssignTicketMutation,
   useAddCommentMutation,
+  useUpdateTicketMutation,
+  useDeleteTicketMutation,
 } = ticketApi;

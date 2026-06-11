@@ -42,7 +42,29 @@ export const addCommentSchema = z.object({
     .max(5000, "Message must not exceed 5000 characters"),
 });
 
+export const updateTicketSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(5, "Title must be at least 5 characters")
+    .max(100, "Title is too long")
+    .optional(),
+  description: z.string().trim().min(10, "Description must be at least 10 characters").optional(),
+  category: z.enum(TicketCategory, {
+    message: "Invalid ticket category",
+  }).optional(),
+  priority: z.enum(TicketPriority, {
+    message: "Invalid ticket priority",
+  }).optional(),
+  assignedTo: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, "Invalid assignedTo ID format")
+    .optional()
+    .nullable(),
+});
+
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;
+export type UpdateTicketInput = z.infer<typeof updateTicketSchema>;
 export type UpdateTicketStatusInput = z.infer<typeof updateTicketStatusSchema>;
 export type AssignTicketInput = z.infer<typeof assignTicketSchema>;
 export type AddCommentInput = z.infer<typeof addCommentSchema>;

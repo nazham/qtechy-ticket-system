@@ -1,22 +1,30 @@
 import { Loader2, X } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { toast } from 'react-toastify';
 import { extractApiError } from '../../api/utils';
 import { TicketCategory, TicketPriority } from '../../constants/enums';
 import { useRoles } from '../../hooks/useRoles';
 import { useGetUsersQuery } from '../../store/slices/authApi';
-import { useCreateTicketMutation } from '../../store/slices/ticketApi';
+import {
+  useCreateTicketMutation,
+  useUpdateTicketMutation,
+  type Ticket,
+} from '../../store/slices/ticketApi';
 
-interface CreateTicketModalProps {
+interface TicketFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  ticket?: Ticket;
 }
 
-export default function CreateTicketModal({
+export default function TicketFormModal({
   isOpen,
   onClose,
-}: CreateTicketModalProps) {
-  const [createTicket, { isLoading }] = useCreateTicketMutation();
+  ticket,
+}: TicketFormModalProps) {
+  const [createTicket, { isLoading: isCreating }] = useCreateTicketMutation();
+  const [updateTicket, { isLoading: isUpdating }] = useUpdateTicketMutation();
+  const isLoading = isCreating || isUpdating;
 
   const { isAdmin } = useRoles();
 
@@ -36,6 +44,33 @@ export default function CreateTicketModal({
     title?: string;
     description?: string;
   }>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      if (ticket) {
+        setTitle(ticket.title);
+        setDescription(ticket.description);
+        setCategory(ticket.category);
+        setPriority(ticket.priority);
+        let assigneeId = '';
+        if (ticket.assignedTo) {
+          if (typeof ticket.assignedTo === 'object') {
+            assigneeId = ticket.assignedTo._id;
+          } else {
+            assigneeId = ticket.assignedTo;
+          }
+        }
+        setAssignedTo(assigneeId);
+      } else {
+        setTitle('');
+        setDescription('');
+        setCategory(TicketCategory.Bug);
+        setPriority(TicketPriority.Low);
+        setAssignedTo('');
+      }
+      setErrors({});
+    }
+  }, [isOpen, ticket]);
 
   if (!isOpen) return null;
 
@@ -64,25 +99,38 @@ export default function CreateTicketModal({
     if (!validate()) return;
 
     try {
-      await createTicket({
-        title: title.trim(),
-        description: description.trim(),
-        category,
-        priority,
-        assignedTo: isAdmin && assignedTo ? assignedTo : null,
-      }).unwrap();
-
-      toast.success('Ticket created successfully!');
-      // Reset form
-      setTitle('');
-      setDescription('');
-      setCategory(TicketCategory.Bug);
-      setPriority(TicketPriority.Low);
-      setAssignedTo('');
-      setErrors({});
+      if (ticket) {
+        // Edit mode (Admin only)
+        await updateTicket({
+          id: ticket._id,
+          updates: {
+            title: title.trim(),
+            description: description.trim(),
+            category,
+            priority,
+            assignedTo: assignedTo || null,
+          },
+        }).unwrap();
+        toast.success('Ticket updated successfully!');
+      } else {
+        // Create mode
+        await createTicket({
+          title: title.trim(),
+          description: description.trim(),
+          category,
+          priority,
+          assignedTo: isAdmin && assignedTo ? assignedTo : null,
+        }).unwrap();
+        toast.success('Ticket created successfully!');
+      }
       onClose();
     } catch (err) {
-      toast.error(extractApiError(err, 'Failed to create ticket'));
+      toast.error(
+        extractApiError(
+          err,
+          ticket ? 'Failed to update ticket' : 'Failed to create ticket'
+        )
+      );
     }
   };
 
@@ -99,7 +147,7 @@ export default function CreateTicketModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-border pb-4">
           <h2 className="text-xl font-bold text-neutral-text-primary">
-            Create Support Ticket
+            {ticket ? 'Edit Support Ticket' : 'Create Support Ticket'}
           </h2>
           <button
             onClick={onClose}
@@ -271,8 +319,10 @@ export default function CreateTicketModal({
               {isLoading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  Creating...
+                  {ticket ? 'Saving...' : 'Creating...'}
                 </>
+              ) : ticket ? (
+                'Save'
               ) : (
                 'Create'
               )}

@@ -8,6 +8,8 @@ import {
   getTicketsService,
   updateTicketStatusService,
   getTicketStatisticsService,
+  updateTicketService,
+  deleteTicketService,
 } from "../services/ticketService";
 import { GetTicketsQueryInput } from "../validators/ticketValidators";
 
@@ -173,6 +175,53 @@ export const getTicketStatistics = async (
     res.status(200).json({
       success: true,
       data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update ticket details
+// @route   PUT /api/tickets/:id
+// @access  Private (Permission: tickets:update - Admin Only)
+export const updateTicket = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const ticketId = req.params.id as string;
+    const userId = req.user!._id.toString();
+    const userRole = req.user!.role;
+
+    const ticket = await updateTicketService(ticketId, req.body, userId, userRole);
+
+    res.status(200).json({
+      success: true,
+      data: ticket,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete ticket
+// @route   DELETE /api/tickets/:id
+// @access  Private (Permission: tickets:delete - Admin Only)
+export const deleteTicket = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const ticketId = req.params.id as string;
+    const userRole = req.user!.role;
+
+    await deleteTicketService(ticketId, userRole);
+
+    res.status(200).json({
+      success: true,
+      data: null,
     });
   } catch (error) {
     next(error);
