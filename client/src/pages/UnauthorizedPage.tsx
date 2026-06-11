@@ -1,7 +1,10 @@
 import { ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function UnauthorizedPage() {
+  useDocumentTitle('Access Denied');
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-bg text-neutral-text-primary">
       <div className="text-center">

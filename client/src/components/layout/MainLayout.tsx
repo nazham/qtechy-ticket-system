@@ -77,11 +77,22 @@ export default function MainLayout() {
     navigate('/login');
   };
 
-  // Filter nav items by the current user's permissions
-  const visibleNavItems = navItems.filter(
-    (item) =>
-      !item.permission || (user && user.permissions.includes(item.permission))
-  );
+  // Filter nav items by the current user's permissions and update label dynamically
+  const visibleNavItems = navItems
+    .map((item) => {
+      if (item.to === '/tickets' && user?.role) {
+        let label = 'Tickets';
+        if (user.role === 'admin') label = 'All Tickets';
+        else if (user.role === 'agent') label = 'Assigned Tickets';
+        else if (user.role === 'user') label = 'My Tickets';
+        return { ...item, label };
+      }
+      return item;
+    })
+    .filter(
+      (item) =>
+        !item.permission || (user && user.permissions.includes(item.permission))
+    );
 
   return (
     <div className="flex h-screen bg-neutral-bg text-neutral-text-primary">
@@ -106,9 +117,11 @@ export default function MainLayout() {
           <div className="flex items-center gap-3 overflow-hidden">
             {!collapsed && (
               <>
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-accent font-bold text-white shadow-md shadow-brand-accent/20">
-                  QT
-                </div>
+                <img
+                  src="/favicon.svg"
+                  className="h-9 w-9 shrink-0 rounded-lg shadow-md shadow-brand-accent/25"
+                  alt="QTechy Logo"
+                />
                 <h1 className="text-lg font-semibold tracking-tight whitespace-nowrap text-white">
                   <span className="text-brand-accent">QTechy</span> Tickets
                 </h1>

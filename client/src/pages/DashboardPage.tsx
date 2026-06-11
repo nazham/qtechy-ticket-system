@@ -14,6 +14,7 @@ import { selectUser } from '../store/slices/authSlice';
 import { useGetTicketStatisticsQuery } from '../store/slices/ticketApi';
 import { useHasPermission } from '../hooks/useHasPermission';
 import { Permission } from '../constants/permissions';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const MetricValue = ({
   loading,
@@ -29,6 +30,8 @@ const MetricValue = ({
 };
 
 export default function DashboardPage() {
+  useDocumentTitle('Dashboard');
+
   const user = useAppSelector(selectUser);
   const {
     data: statsData,

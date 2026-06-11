@@ -8,16 +8,32 @@ import { useHasPermission } from '../hooks/useHasPermission';
 import { Permission } from '../constants/permissions';
 import CreateTicketModal from '../components/tickets/CreateTicketModal';
 import { useRoles } from '../hooks/useRoles';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useTicketFilters } from '../hooks/useTicketFilters';
 import TicketStatsGrid from '../components/tickets/TicketStatsGrid';
 import TicketFilters from '../components/tickets/TicketFilters';
 import TicketTable from '../components/tickets/TicketTable';
 
 export default function TicketsPage() {
-  const { isAgent } = useRoles();
+  const { isAdmin, isAgent, isUser } = useRoles();
   const showAssignedColumn = !isAgent;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const canCreate = useHasPermission(Permission.CreateTicket);
+
+  let pageTitle = 'Tickets';
+  let pageDescription = 'View, track, and manage customer support requests.';
+  if (isAdmin) {
+    pageTitle = 'All Tickets';
+    pageDescription = 'View, track, and manage all customer support requests across the organization.';
+  } else if (isAgent) {
+    pageTitle = 'Assigned Tickets';
+    pageDescription = 'View and manage customer support requests assigned to you.';
+  } else if (isUser) {
+    pageTitle = 'My Tickets';
+    pageDescription = 'View, track, and manage your Tickets.';
+  }
+
+  useDocumentTitle(pageTitle);
 
   // Custom filter and sorting hook
   const {
@@ -68,10 +84,10 @@ export default function TicketsPage() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-neutral-text-primary">
-            Tickets
+            {pageTitle}
           </h1>
           <p className="mt-0.5 text-xs text-neutral-text-secondary">
-            View, track, and manage customer support requests.
+            {pageDescription}
           </p>
         </div>
         <div className="flex items-center gap-2">

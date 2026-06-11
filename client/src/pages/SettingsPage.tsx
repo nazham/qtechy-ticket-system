@@ -1,4 +1,8 @@
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+
 export default function SettingsPage() {
+  useDocumentTitle('Settings');
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold text-neutral-text-primary">

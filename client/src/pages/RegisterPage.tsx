@@ -6,8 +6,11 @@ import { extractApiError } from '../api/utils';
 import { useAppSelector } from '../store/hooks';
 import { useRegisterUserMutation } from '../store/slices/authApi';
 import { selectIsAuthenticated, selectUser } from '../store/slices/authSlice';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function RegisterPage() {
+  useDocumentTitle('Register');
+
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const user = useAppSelector(selectUser);
 
@@ -93,9 +96,11 @@ export default function RegisterPage() {
         <div className="rounded-premium-card border border-dark-border bg-dark-surface/80 p-8 shadow-2xl backdrop-blur-xl">
           {/* Branding */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-brand-accent shadow-lg shadow-brand-accent/20">
-              <UserPlus className="text-white" size={26} />
-            </div>
+            <img
+              src="/favicon.svg"
+              className="mx-auto mb-4 h-14 w-14 rounded-xl shadow-lg shadow-brand-accent/25"
+              alt="QTechy Logo"
+            />
             <h1 className="text-2xl font-bold text-dark-text-primary">
               Create an account
             </h1>

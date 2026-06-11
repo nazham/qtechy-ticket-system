@@ -23,6 +23,7 @@ import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import { extractApiError } from '../api/utils';
 import { TicketStatus, TicketPriority } from '../constants/enums';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 export default function TicketDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +36,17 @@ export default function TicketDetailsPage() {
   } = useGetTicketQuery(id as string, {
     skip: !id,
   });
+
+  let pageTitle = 'Ticket Details';
+  if (isLoading) {
+    pageTitle = 'Loading Ticket...';
+  } else if (error || !ticket) {
+    pageTitle = 'Failed to Load Ticket';
+  } else if (ticket) {
+    pageTitle = `Ticket #${ticket.ticketNumber}: ${ticket.title}`;
+  }
+
+  useDocumentTitle(pageTitle);
 
   const [updateStatus, { isLoading: isUpdatingStatus }] =
     useUpdateTicketStatusMutation();
