@@ -77,7 +77,23 @@ const startServer = async () => {
     app.use(express.json());
     app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-    // Health Check Route
+    // Root and Health Check Routes
+    app.get("/", (req: Request, res: Response) => {
+      res.status(200).json({
+        success: true,
+        message: "Welcome to the QTechy Ticket System API",
+        documentation: "Please refer to the frontend client to interact with this service.",
+      });
+    });
+
+    app.get("/api", (req: Request, res: Response) => {
+      res.status(200).json({
+        success: true,
+        message: "QTechy Ticket System API",
+        health: "/api/health",
+      });
+    });
+
     app.get("/api/health", (req: Request, res: Response) => {
       res.status(200).json({
         success: true,
