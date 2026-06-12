@@ -8,6 +8,7 @@
 | **Client (Vercel)** | https://qtechy-ticket-system.vercel.app/ |
 | **Server (Render)** | https://qtechy-ticket-system-mh7m.onrender.com/api |
 | **GitHub** | https://github.com/nazham/qtechy-ticket-system |
+| **Screen Recording** | [Google Drive Demo (All Roles)](https://drive.google.com/file/d/176FYZ8d0gNUli_T_Y8IqaAva1SqI--DM/view?usp=sharing) |
 
 ---
 
