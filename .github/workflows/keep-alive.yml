@@ -1,0 +1,21 @@
+# Keep-Alive Workflow
+# Pings the Render free-tier backend every 14 minutes to prevent it from
+# spinning down after 15 minutes of inactivity.
+
+name: Keep Render Alive
+
+on:
+  schedule:
+    # Runs every 14 minutes
+    - cron: "*/14 * * * *"
+  workflow_dispatch: # Allow manual trigger for testing
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: |
+          curl -fsS --retry 3 --retry-delay 5 --max-time 30 \
+            "https://qtechy-ticket-system-mh7m.onrender.com/api/health" \
+            || echo "::warning::Health check failed — server may be cold-starting"

@@ -27,7 +27,11 @@ const startServer = async () => {
 
     // Health Check Route
     app.get("/api/health", (req: Request, res: Response) => {
-      res.status(200).json({ success: true, message: "API is running smoothly" });
+      res.status(200).json({
+        success: true,
+        message: "API is running smoothly",
+        timestamp: new Date().toISOString(),
+      });
     });
 
     // Mount Routes
