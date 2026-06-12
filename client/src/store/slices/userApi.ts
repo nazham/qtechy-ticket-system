@@ -71,7 +71,8 @@ export const userApi = apiSlice.injectEndpoints({
         success: boolean;
         data: ApiUserData;
       }): UserWithMeta => normalizeUserWithMeta(response.data),
-      invalidatesTags: ['User'],
+      // Also invalidate Ticket cache because demotion automatically unassigns tickets
+      invalidatesTags: ['User', 'Ticket'],
     }),
     deleteUser: build.mutation<UserWithMeta, string>({
       query: (id) => ({
@@ -82,7 +83,8 @@ export const userApi = apiSlice.injectEndpoints({
         success: boolean;
         data: ApiUserData;
       }): UserWithMeta => normalizeUserWithMeta(response.data),
-      invalidatesTags: ['User'],
+      // Also invalidate Ticket cache because deletion automatically unassigns tickets
+      invalidatesTags: ['User', 'Ticket'],
     }),
   }),
 });
