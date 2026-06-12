@@ -61,8 +61,8 @@ export const authorizePermissions = (...requiredPermissions: Permission[]) => {
     const userRole = req.user.role;
     const userPermissions = ROLE_PERMISSIONS[userRole];
     if (!userPermissions) {
-      console.warn(
-        `[RBAC] Unknown role "${userRole}" for user ${req.user._id} — denying all permissions`,
+      process.stderr.write(
+        `[RBAC] Unknown role "${userRole}" for user ${req.user._id} — denying all permissions\n`,
       );
       return next(new AppError("Not authorized to access this resource", 403));
     }

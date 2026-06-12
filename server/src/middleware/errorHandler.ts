@@ -24,8 +24,12 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction,
 ): void => {
-  // Log the full error for developers — never expose to client
-  console.error(`[ERROR] ${err.message}`, err.stack);
+  // Log errors safely — stack traces only in non-production
+  if (process.env.NODE_ENV !== "production") {
+    process.stderr.write(`[ERROR] ${err.message}\n${err.stack ?? ""}\n`);
+  } else {
+    process.stderr.write(`[ERROR] ${err.message}\n`);
+  }
 
   let statusCode = err instanceof AppError ? err.statusCode : 500;
   let message = err instanceof AppError ? err.message : "Internal Server Error";

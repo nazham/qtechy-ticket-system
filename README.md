@@ -219,6 +219,7 @@ npm run dev
 | `JWT_SECRET`     | ✅       | Secret key for signing JWTs   | `your_super_secret_key`                               |
 | `JWT_EXPIRES_IN` | ✅       | JWT expiry duration           | `30d`                                                 |
 | `NODE_ENV`       | ❌       | `development` or `production` | `development`                                         |
+| `FRONTEND_URL`   | ✅       | CORS allowed origins (comma-separated) | `http://localhost:5173,https://qtechy.com` |
 
 ### Client — `/client/.env`
 
@@ -307,7 +308,6 @@ Permissions are assigned per role in `server/src/constants/enums.ts` and mirrore
 | `tickets:add-comment`   |  ✅   |  ✅   |  ✅  |
 | `users:manage`          |  ✅   |       |      |
 | `dashboard:view`        |  ✅   |  ✅   |  ✅  |
-| `settings:view`         |  ✅   |  ✅   |      |
 
 **Front-end routes by role:**
 
@@ -316,7 +316,6 @@ Permissions are assigned per role in `server/src/constants/enums.ts` and mirrore
 | `/dashboard`   |    ✅    |      ✅       |    ✅     |
 | `/tickets`     | ✅ (All) | ✅ (Assigned) | ✅ (Mine) |
 | `/tickets/:id` |    ✅    |      ✅       |    ✅     |
-| `/settings`    |    ✅    |      ✅       |    ❌     |
 | `/admin`       |    ✅    |      ❌       |    ❌     |
 | `/users`       |    ✅    |      ❌       |    ❌     |
 

@@ -12,6 +12,20 @@ import authRoutes from "./routes/authRoutes";
 import ticketRoutes from "./routes/ticketRoutes";
 import userRoutes from "./routes/userRoutes";
 
+/**
+ * Build the list of allowed origins from the FRONTEND_URL env variable.
+ * Supports comma-separated values for multiple origins.
+ * Example: FRONTEND_URL=https://app.qtechy.com,https://staging.qtechy.com
+ */
+const getAllowedOrigins = (): string[] => {
+  const raw = process.env.FRONTEND_URL;
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+};
+
 const startServer = async () => {
   try {
     // Connect to Database
@@ -19,11 +33,49 @@ const startServer = async () => {
 
     const app: Application = express();
 
-    // Middleware
-    app.use(helmet());
-    app.use(cors());
+    // ── Security Middleware ──────────────────────────────────────────────
+    app.use(
+      helmet({
+        // Prevent clickjacking — deny all framing of the API
+        frameguard: { action: "deny" },
+        // Content Security Policy — restrictive defaults for an API server
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'none'"],
+            scriptSrc: ["'none'"],
+            styleSrc: ["'none'"],
+            imgSrc: ["'none'"],
+            connectSrc: ["'self'"],
+            frameSrc: ["'none'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'none'"],
+            formAction: ["'self'"],
+          },
+        },
+      }),
+    );
+
+    // ── CORS ────────────────────────────────────────────────────────────
+    const allowedOrigins = getAllowedOrigins();
+    app.use(
+      cors({
+        origin(origin, callback) {
+          // Allow server-to-server / non-browser requests (no origin header)
+          if (!origin) return callback(null, true);
+
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+
+          return callback(new Error("Not allowed by CORS"));
+        },
+        credentials: true,
+      }),
+    );
+
+    // ── Body Parsing & Logging ──────────────────────────────────────────
     app.use(express.json());
-    app.use(morgan("dev"));
+    app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
     // Health Check Route
     app.get("/api/health", (req: Request, res: Response) => {
@@ -51,7 +103,8 @@ const startServer = async () => {
       );
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    const message = error instanceof Error ? error.message : "Unknown startup error";
+    process.stderr.write(`Failed to start server: ${message}\n`);
     process.exit(1);
   }
 };

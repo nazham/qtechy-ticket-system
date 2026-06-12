@@ -2,7 +2,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Settings,
+  // Settings,
   ShieldCheck,
   Ticket,
   Users,
@@ -45,12 +45,14 @@ const navItems: NavItem[] = [
     icon: ShieldCheck,
     permission: Permission.ManageUsers,
   },
+  /* TEMPORARILY HIDDEN
   {
     label: 'Settings',
     to: '/settings',
     icon: Settings,
     permission: Permission.ViewSettings,
   },
+  */
 ];
 
 export default function MainLayout() {

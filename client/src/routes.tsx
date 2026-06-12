@@ -12,7 +12,7 @@ import AdminPage from './pages/AdminPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import SettingsPage from './pages/SettingsPage';
+// import SettingsPage from './pages/SettingsPage';
 import TicketsPage from './pages/TicketsPage';
 import TicketDetailsPage from './pages/TicketDetailsPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
@@ -61,6 +61,7 @@ export const router = createBrowserRouter(
       </Route>
 
       {/* ── Agent + Admin Routes ───────────────────────────────────── */}
+      {/* TEMPORARILY HIDDEN
       <Route
         element={
           <ProtectedRoute requiredPermission={Permission.ViewSettings} />
@@ -70,6 +71,7 @@ export const router = createBrowserRouter(
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
+      */}
 
       {/* ── Catch-all ──────────────────────────────────────────────── */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

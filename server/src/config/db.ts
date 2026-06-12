@@ -11,13 +11,10 @@ const connectDB = async (): Promise<void> => {
     mongoose.set("sanitizeFilter", true);
 
     const conn = await mongoose.connect(mongoURI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    process.stdout.write(`MongoDB Connected: ${conn.connection.host}\n`);
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Database Connection Error: ${error.message}`);
-    } else {
-      console.error("An unknown error occurred during database connection");
-    }
+    const message = error instanceof Error ? error.message : "Unknown database error";
+    process.stderr.write(`Database Connection Error: ${message}\n`);
     throw error;
   }
 };
