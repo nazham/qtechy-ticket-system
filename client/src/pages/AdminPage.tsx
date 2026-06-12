@@ -360,7 +360,7 @@ export default function AdminPage() {
           <div>
             <p className="text-sm font-semibold text-brand-accent-dark">Seed Credentials</p>
             <p className="mt-1 text-xs text-neutral-text-secondary">
-              All seeded accounts use password <span className="font-mono font-bold text-neutral-text-primary">Password123!</span>
+              All seeded accounts use password <span className="font-mono font-bold text-neutral-text-primary">QTechy$SecurePass99!</span>
             </p>
             <div className="mt-3 flex flex-wrap gap-3">
               {[
