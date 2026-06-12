@@ -3,12 +3,7 @@
  * Strictly conforms to Ticket and User schemas / enums.
  */
 import { Types } from "mongoose";
-import {
-  TicketCategory,
-  TicketPriority,
-  TicketStatus,
-  UserRole,
-} from "../constants/enums";
+import { TicketCategory, TicketPriority, TicketStatus, UserRole } from "../constants/enums";
 
 // ─── Seed Users ──────────────────────────────────────────────────────────────
 // Passwords are plain-text here; adminService hashes them before insert.
@@ -83,20 +78,44 @@ const openHistory = (createdAt: Date): SeedStatusHistory[] => [
 
 const inProgressHistory = (createdAt: Date): SeedStatusHistory[] => [
   { status: TicketStatus.Open, changedBy: ADMIN_ID, changedAt: createdAt },
-  { status: TicketStatus.InProgress, changedBy: AGENT_ID, changedAt: new Date(createdAt.getTime() + 3_600_000) },
+  {
+    status: TicketStatus.InProgress,
+    changedBy: AGENT_ID,
+    changedAt: new Date(createdAt.getTime() + 3_600_000),
+  },
 ];
 
 const resolvedHistory = (createdAt: Date): SeedStatusHistory[] => [
   { status: TicketStatus.Open, changedBy: ADMIN_ID, changedAt: createdAt },
-  { status: TicketStatus.InProgress, changedBy: AGENT_ID, changedAt: new Date(createdAt.getTime() + 3_600_000) },
-  { status: TicketStatus.Resolved, changedBy: AGENT_ID, changedAt: new Date(createdAt.getTime() + 86_400_000) },
+  {
+    status: TicketStatus.InProgress,
+    changedBy: AGENT_ID,
+    changedAt: new Date(createdAt.getTime() + 3_600_000),
+  },
+  {
+    status: TicketStatus.Resolved,
+    changedBy: AGENT_ID,
+    changedAt: new Date(createdAt.getTime() + 86_400_000),
+  },
 ];
 
 const closedHistory = (createdAt: Date): SeedStatusHistory[] => [
   { status: TicketStatus.Open, changedBy: ADMIN_ID, changedAt: createdAt },
-  { status: TicketStatus.InProgress, changedBy: AGENT_ID, changedAt: new Date(createdAt.getTime() + 3_600_000) },
-  { status: TicketStatus.Resolved, changedBy: AGENT_ID, changedAt: new Date(createdAt.getTime() + 86_400_000) },
-  { status: TicketStatus.Closed, changedBy: ADMIN_ID, changedAt: new Date(createdAt.getTime() + 172_800_000) },
+  {
+    status: TicketStatus.InProgress,
+    changedBy: AGENT_ID,
+    changedAt: new Date(createdAt.getTime() + 3_600_000),
+  },
+  {
+    status: TicketStatus.Resolved,
+    changedBy: AGENT_ID,
+    changedAt: new Date(createdAt.getTime() + 86_400_000),
+  },
+  {
+    status: TicketStatus.Closed,
+    changedBy: ADMIN_ID,
+    changedAt: new Date(createdAt.getTime() + 172_800_000),
+  },
 ];
 
 // ─── Seed Tickets ─────────────────────────────────────────────────────────────
@@ -116,9 +135,22 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(12),
     updatedAt: daysAgo(10),
     comments: [
-      { user: AGENT_ID, message: "Reproduced locally. Looks like a Safari-specific issue with optional chaining on null auth response. Working on a fix.", createdAt: daysAgo(11) },
-      { user: USER_ID, message: "Any ETA on this? Several clients are affected.", createdAt: daysAgo(10) },
-      { user: AGENT_ID, message: "Fix is in review. Should be deployed by EOD.", createdAt: daysAgo(9) },
+      {
+        user: AGENT_ID,
+        message:
+          "Reproduced locally. Looks like a Safari-specific issue with optional chaining on null auth response. Working on a fix.",
+        createdAt: daysAgo(11),
+      },
+      {
+        user: USER_ID,
+        message: "Any ETA on this? Several clients are affected.",
+        createdAt: daysAgo(10),
+      },
+      {
+        user: AGENT_ID,
+        message: "Fix is in review. Should be deployed by EOD.",
+        createdAt: daysAgo(9),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(12)),
   },
@@ -136,7 +168,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(8),
     updatedAt: daysAgo(8),
     comments: [
-      { user: ADMIN_ID, message: "Confirmed. The pagination state is not being reset when query params change. Assigning to triage.", createdAt: daysAgo(7) },
+      {
+        user: ADMIN_ID,
+        message:
+          "Confirmed. The pagination state is not being reset when query params change. Assigning to triage.",
+        createdAt: daysAgo(7),
+      },
     ],
     statusHistory: openHistory(daysAgo(8)),
   },
@@ -154,8 +191,18 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(15),
     updatedAt: daysAgo(13),
     comments: [
-      { user: AGENT_ID, message: "Checked the event bus — the `ticket.assigned` event is being emitted but the email handler is not subscribed.", createdAt: daysAgo(14) },
-      { user: ADMIN_ID, message: "Good find. The handler was accidentally removed during the notification refactor. Re-adding it now.", createdAt: daysAgo(13) },
+      {
+        user: AGENT_ID,
+        message:
+          "Checked the event bus — the `ticket.assigned` event is being emitted but the email handler is not subscribed.",
+        createdAt: daysAgo(14),
+      },
+      {
+        user: ADMIN_ID,
+        message:
+          "Good find. The handler was accidentally removed during the notification refactor. Re-adding it now.",
+        createdAt: daysAgo(13),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(15)),
   },
@@ -173,7 +220,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(20),
     updatedAt: daysAgo(18),
     comments: [
-      { user: AGENT_ID, message: "Root cause found: deleted tickets were not being excluded from the aggregation query. Fixed.", createdAt: daysAgo(19) },
+      {
+        user: AGENT_ID,
+        message:
+          "Root cause found: deleted tickets were not being excluded from the aggregation query. Fixed.",
+        createdAt: daysAgo(19),
+      },
       { user: USER_ID, message: "Count looks correct now. Thanks!", createdAt: daysAgo(18) },
     ],
     statusHistory: resolvedHistory(daysAgo(20)),
@@ -208,7 +260,11 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(30),
     updatedAt: daysAgo(25),
     comments: [
-      { user: AGENT_ID, message: "Fixed by persisting the preference to localStorage and reading it on app init.", createdAt: daysAgo(27) },
+      {
+        user: AGENT_ID,
+        message: "Fixed by persisting the preference to localStorage and reading it on app init.",
+        createdAt: daysAgo(27),
+      },
       { user: USER_ID, message: "Works perfectly now. Thank you!", createdAt: daysAgo(25) },
     ],
     statusHistory: closedHistory(daysAgo(30)),
@@ -243,7 +299,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(6),
     updatedAt: daysAgo(5),
     comments: [
-      { user: AGENT_ID, message: "Confirmed. The comment filter in the detail view is comparing the wrong field. Patch in progress.", createdAt: daysAgo(5) },
+      {
+        user: AGENT_ID,
+        message:
+          "Confirmed. The comment filter in the detail view is comparing the wrong field. Patch in progress.",
+        createdAt: daysAgo(5),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(6)),
   },
@@ -261,7 +322,11 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(18),
     updatedAt: daysAgo(16),
     comments: [
-      { user: AGENT_ID, message: "Fixed by calling `form.reset()` inside the `onSuccess` callback of the mutation.", createdAt: daysAgo(17) },
+      {
+        user: AGENT_ID,
+        message: "Fixed by calling `form.reset()` inside the `onSuccess` callback of the mutation.",
+        createdAt: daysAgo(17),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(18)),
   },
@@ -279,7 +344,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(2),
     updatedAt: daysAgo(2),
     comments: [
-      { user: ADMIN_ID, message: "All date rendering should use `toLocaleDateString` with the user's locale. Will address in next sprint.", createdAt: daysAgo(1) },
+      {
+        user: ADMIN_ID,
+        message:
+          "All date rendering should use `toLocaleDateString` with the user's locale. Will address in next sprint.",
+        createdAt: daysAgo(1),
+      },
     ],
     statusHistory: openHistory(daysAgo(2)),
   },
@@ -299,7 +369,11 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(10),
     updatedAt: daysAgo(10),
     comments: [
-      { user: ADMIN_ID, message: "Great idea. This is on our Q3 roadmap. Upvotes will help prioritize.", createdAt: daysAgo(9) },
+      {
+        user: ADMIN_ID,
+        message: "Great idea. This is on our Q3 roadmap. Upvotes will help prioritize.",
+        createdAt: daysAgo(9),
+      },
     ],
     statusHistory: openHistory(daysAgo(10)),
   },
@@ -317,9 +391,22 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(25),
     updatedAt: daysAgo(22),
     comments: [
-      { user: AGENT_ID, message: "Implementing using the `papaparse` library for CSV generation on the client side.", createdAt: daysAgo(23) },
-      { user: USER_ID, message: "Will this support filtering? E.g., export only Open tickets from this month?", createdAt: daysAgo(22) },
-      { user: AGENT_ID, message: "Yes, the export will respect the currently applied filters.", createdAt: daysAgo(21) },
+      {
+        user: AGENT_ID,
+        message:
+          "Implementing using the `papaparse` library for CSV generation on the client side.",
+        createdAt: daysAgo(23),
+      },
+      {
+        user: USER_ID,
+        message: "Will this support filtering? E.g., export only Open tickets from this month?",
+        createdAt: daysAgo(22),
+      },
+      {
+        user: AGENT_ID,
+        message: "Yes, the export will respect the currently applied filters.",
+        createdAt: daysAgo(21),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(25)),
   },
@@ -353,7 +440,11 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(4),
     updatedAt: daysAgo(4),
     comments: [
-      { user: USER_ID, message: "This would be a game-changer for our on-call team. +1.", createdAt: daysAgo(3) },
+      {
+        user: USER_ID,
+        message: "This would be a game-changer for our on-call team. +1.",
+        createdAt: daysAgo(3),
+      },
     ],
     statusHistory: openHistory(daysAgo(4)),
   },
@@ -387,7 +478,11 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(11),
     updatedAt: daysAgo(11),
     comments: [
-      { user: ADMIN_ID, message: "We'll evaluate `react-md-editor` as a drop-in solution. Low priority for now.", createdAt: daysAgo(10) },
+      {
+        user: ADMIN_ID,
+        message: "We'll evaluate `react-md-editor` as a drop-in solution. Low priority for now.",
+        createdAt: daysAgo(10),
+      },
     ],
     statusHistory: openHistory(daysAgo(11)),
   },
@@ -421,8 +516,16 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(22),
     updatedAt: daysAgo(19),
     comments: [
-      { user: AGENT_ID, message: "Using `speakeasy` for TOTP and `qrcode` for setup QR generation.", createdAt: daysAgo(21) },
-      { user: ADMIN_ID, message: "Make sure to also implement backup recovery codes.", createdAt: daysAgo(20) },
+      {
+        user: AGENT_ID,
+        message: "Using `speakeasy` for TOTP and `qrcode` for setup QR generation.",
+        createdAt: daysAgo(21),
+      },
+      {
+        user: ADMIN_ID,
+        message: "Make sure to also implement backup recovery codes.",
+        createdAt: daysAgo(20),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(22)),
   },
@@ -456,7 +559,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(28),
     updatedAt: daysAgo(28),
     comments: [
-      { user: ADMIN_ID, message: "Adding to the long-term product roadmap. Will revisit after the web app reaches feature parity.", createdAt: daysAgo(27) },
+      {
+        user: ADMIN_ID,
+        message:
+          "Adding to the long-term product roadmap. Will revisit after the web app reaches feature parity.",
+        createdAt: daysAgo(27),
+      },
     ],
     statusHistory: openHistory(daysAgo(28)),
   },
@@ -476,8 +584,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(16),
     updatedAt: daysAgo(14),
     comments: [
-      { user: AGENT_ID, message: "Added the compound index in a migration. Response times are now under 200ms in testing.", createdAt: daysAgo(15) },
-      { user: ADMIN_ID, message: "Confirmed in production. Great catch and fast turnaround.", createdAt: daysAgo(14) },
+      {
+        user: AGENT_ID,
+        message:
+          "Added the compound index in a migration. Response times are now under 200ms in testing.",
+        createdAt: daysAgo(15),
+      },
+      {
+        user: ADMIN_ID,
+        message: "Confirmed in production. Great catch and fast turnaround.",
+        createdAt: daysAgo(14),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(16)),
   },
@@ -495,7 +612,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(9),
     updatedAt: daysAgo(7),
     comments: [
-      { user: AGENT_ID, message: "Profiling with `clinic.js` confirmed the leak is in the `ConnectionManager.on('disconnect')` handler. Listeners are not being removed on connection close.", createdAt: daysAgo(8) },
+      {
+        user: AGENT_ID,
+        message:
+          "Profiling with `clinic.js` confirmed the leak is in the `ConnectionManager.on('disconnect')` handler. Listeners are not being removed on connection close.",
+        createdAt: daysAgo(8),
+      },
       { user: ADMIN_ID, message: "This is P0. Loop in the backend lead.", createdAt: daysAgo(7) },
     ],
     statusHistory: inProgressHistory(daysAgo(9)),
@@ -514,8 +636,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(35),
     updatedAt: daysAgo(32),
     comments: [
-      { user: AGENT_ID, message: "Added a startup assertion that throws if `JWT_EXPIRES_IN` is not set. Also hardcoded a fallback of `7d`.", createdAt: daysAgo(34) },
-      { user: ADMIN_ID, message: "Good. Also invalidate all existing tokens by rotating the JWT_SECRET.", createdAt: daysAgo(33) },
+      {
+        user: AGENT_ID,
+        message:
+          "Added a startup assertion that throws if `JWT_EXPIRES_IN` is not set. Also hardcoded a fallback of `7d`.",
+        createdAt: daysAgo(34),
+      },
+      {
+        user: ADMIN_ID,
+        message: "Good. Also invalidate all existing tokens by rotating the JWT_SECRET.",
+        createdAt: daysAgo(33),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(35)),
   },
@@ -533,8 +664,16 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(40),
     updatedAt: daysAgo(36),
     comments: [
-      { user: AGENT_ID, message: "Increased `maxPoolSize` to 50 in the Mongoose connection options. Will monitor.", createdAt: daysAgo(39) },
-      { user: ADMIN_ID, message: "Peak hour errors have stopped. Closing.", createdAt: daysAgo(36) },
+      {
+        user: AGENT_ID,
+        message: "Increased `maxPoolSize` to 50 in the Mongoose connection options. Will monitor.",
+        createdAt: daysAgo(39),
+      },
+      {
+        user: ADMIN_ID,
+        message: "Peak hour errors have stopped. Closing.",
+        createdAt: daysAgo(36),
+      },
     ],
     statusHistory: closedHistory(daysAgo(40)),
   },
@@ -552,7 +691,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(19),
     updatedAt: daysAgo(17),
     comments: [
-      { user: AGENT_ID, message: "Added `https://staging.qtechy.dev` to the CORS origin array. Staging is now accessible.", createdAt: daysAgo(18) },
+      {
+        user: AGENT_ID,
+        message:
+          "Added `https://staging.qtechy.dev` to the CORS origin array. Staging is now accessible.",
+        createdAt: daysAgo(18),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(19)),
   },
@@ -586,7 +730,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(3),
     updatedAt: daysAgo(2),
     comments: [
-      { user: AGENT_ID, message: "Fixing the violations file by file. About halfway through. No logic changes needed — just type annotations.", createdAt: daysAgo(2) },
+      {
+        user: AGENT_ID,
+        message:
+          "Fixing the violations file by file. About halfway through. No logic changes needed — just type annotations.",
+        createdAt: daysAgo(2),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(3)),
   },
@@ -604,8 +753,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(13),
     updatedAt: daysAgo(11),
     comments: [
-      { user: AGENT_ID, message: "Applied `express-rate-limit` middleware to auth routes: 10 requests/15 minutes per IP with a 429 response.", createdAt: daysAgo(12) },
-      { user: ADMIN_ID, message: "Verified. Also added a CAPTCHA challenge after 3 failed attempts.", createdAt: daysAgo(11) },
+      {
+        user: AGENT_ID,
+        message:
+          "Applied `express-rate-limit` middleware to auth routes: 10 requests/15 minutes per IP with a 429 response.",
+        createdAt: daysAgo(12),
+      },
+      {
+        user: ADMIN_ID,
+        message: "Verified. Also added a CAPTCHA challenge after 3 failed attempts.",
+        createdAt: daysAgo(11),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(13)),
   },
@@ -639,7 +797,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(45),
     updatedAt: daysAgo(42),
     comments: [
-      { user: AGENT_ID, message: "Added a startup validation function that checks all required env vars and logs clear error messages before exiting.", createdAt: daysAgo(44) },
+      {
+        user: AGENT_ID,
+        message:
+          "Added a startup validation function that checks all required env vars and logs clear error messages before exiting.",
+        createdAt: daysAgo(44),
+      },
       { user: ADMIN_ID, message: "Deploy worked cleanly. Closing.", createdAt: daysAgo(42) },
     ],
     statusHistory: closedHistory(daysAgo(45)),
@@ -660,8 +823,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(8),
     updatedAt: daysAgo(6),
     comments: [
-      { user: AGENT_ID, message: "Confirmed the renewal reminder emails were disabled due to a misconfiguration. We've sent you a 30-day grace period and fixed the email settings.", createdAt: daysAgo(7) },
-      { user: USER_ID, message: "Thank you! I've updated my card and the account is back to Pro.", createdAt: daysAgo(6) },
+      {
+        user: AGENT_ID,
+        message:
+          "Confirmed the renewal reminder emails were disabled due to a misconfiguration. We've sent you a 30-day grace period and fixed the email settings.",
+        createdAt: daysAgo(7),
+      },
+      {
+        user: USER_ID,
+        message: "Thank you! I've updated my card and the account is back to Pro.",
+        createdAt: daysAgo(6),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(8)),
   },
@@ -679,8 +851,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(2),
     updatedAt: daysAgo(1),
     comments: [
-      { user: AGENT_ID, message: "Located both transactions. A refund has been initiated for the duplicate $49.00 charge. It will appear on your statement within 3-5 business days.", createdAt: daysAgo(1) },
-      { user: USER_ID, message: "Thank you for acting quickly. I'll watch for the refund.", createdAt: daysAgo(1) },
+      {
+        user: AGENT_ID,
+        message:
+          "Located both transactions. A refund has been initiated for the duplicate $49.00 charge. It will appear on your statement within 3-5 business days.",
+        createdAt: daysAgo(1),
+      },
+      {
+        user: USER_ID,
+        message: "Thank you for acting quickly. I'll watch for the refund.",
+        createdAt: daysAgo(1),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(2)),
   },
@@ -714,7 +895,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(17),
     updatedAt: daysAgo(15),
     comments: [
-      { user: AGENT_ID, message: "Found the issue: the SAVE30 coupon was configured with a 10% value in the Stripe dashboard due to a data entry error. Corrected and the difference has been credited to your account.", createdAt: daysAgo(16) },
+      {
+        user: AGENT_ID,
+        message:
+          "Found the issue: the SAVE30 coupon was configured with a 10% value in the Stripe dashboard due to a data entry error. Corrected and the difference has been credited to your account.",
+        createdAt: daysAgo(16),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(17)),
   },
@@ -732,7 +918,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(6),
     updatedAt: daysAgo(6),
     comments: [
-      { user: ADMIN_ID, message: "This is a known limitation of the current billing provider integration. Multi-card support is on the roadmap for Q4.", createdAt: daysAgo(5) },
+      {
+        user: ADMIN_ID,
+        message:
+          "This is a known limitation of the current billing provider integration. Multi-card support is on the roadmap for Q4.",
+        createdAt: daysAgo(5),
+      },
     ],
     statusHistory: openHistory(daysAgo(6)),
   },
@@ -750,7 +941,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(11),
     updatedAt: daysAgo(9),
     comments: [
-      { user: AGENT_ID, message: "Integrating the `vatapi.com` service to lookup VAT rates by country code at checkout.", createdAt: daysAgo(10) },
+      {
+        user: AGENT_ID,
+        message:
+          "Integrating the `vatapi.com` service to lookup VAT rates by country code at checkout.",
+        createdAt: daysAgo(10),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(11)),
   },
@@ -768,7 +964,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(12),
     updatedAt: daysAgo(10),
     comments: [
-      { user: AGENT_ID, message: "Found that the refund task was stuck in 'pending' state due to a Stripe webhook failure. Manually triggered the refund. You should see it within 2 business days.", createdAt: daysAgo(11) },
+      {
+        user: AGENT_ID,
+        message:
+          "Found that the refund task was stuck in 'pending' state due to a Stripe webhook failure. Manually triggered the refund. You should see it within 2 business days.",
+        createdAt: daysAgo(11),
+      },
       { user: USER_ID, message: "Refund received. Thank you.", createdAt: daysAgo(10) },
     ],
     statusHistory: resolvedHistory(daysAgo(12)),
@@ -787,9 +988,22 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(50),
     updatedAt: daysAgo(46),
     comments: [
-      { user: AGENT_ID, message: "A bug in the plan migration script assigned the wrong Stripe price ID. Corrected the subscription and issued a refund of $196.", createdAt: daysAgo(49) },
-      { user: USER_ID, message: "Refund confirmed. Subscription now shows annual. Thank you!", createdAt: daysAgo(47) },
-      { user: ADMIN_ID, message: "Fixed the migration script to prevent recurrence. Closing.", createdAt: daysAgo(46) },
+      {
+        user: AGENT_ID,
+        message:
+          "A bug in the plan migration script assigned the wrong Stripe price ID. Corrected the subscription and issued a refund of $196.",
+        createdAt: daysAgo(49),
+      },
+      {
+        user: USER_ID,
+        message: "Refund confirmed. Subscription now shows annual. Thank you!",
+        createdAt: daysAgo(47),
+      },
+      {
+        user: ADMIN_ID,
+        message: "Fixed the migration script to prevent recurrence. Closing.",
+        createdAt: daysAgo(46),
+      },
     ],
     statusHistory: closedHistory(daysAgo(50)),
   },
@@ -809,8 +1023,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(7),
     updatedAt: daysAgo(5),
     comments: [
-      { user: AGENT_ID, message: "Found that your email domain has strict DMARC rules blocking our sender domain. We've updated our SPF record. Please try the reset again.", createdAt: daysAgo(6) },
-      { user: USER_ID, message: "Reset email arrived and I've regained access. Thank you!", createdAt: daysAgo(5) },
+      {
+        user: AGENT_ID,
+        message:
+          "Found that your email domain has strict DMARC rules blocking our sender domain. We've updated our SPF record. Please try the reset again.",
+        createdAt: daysAgo(6),
+      },
+      {
+        user: USER_ID,
+        message: "Reset email arrived and I've regained access. Thank you!",
+        createdAt: daysAgo(5),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(7)),
   },
@@ -828,7 +1051,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(21),
     updatedAt: daysAgo(19),
     comments: [
-      { user: AGENT_ID, message: "Manually unlocked the account. The 30-minute timer had a bug where it used seconds instead of milliseconds. Fix deployed.", createdAt: daysAgo(20) },
+      {
+        user: AGENT_ID,
+        message:
+          "Manually unlocked the account. The 30-minute timer had a bug where it used seconds instead of milliseconds. Fix deployed.",
+        createdAt: daysAgo(20),
+      },
     ],
     statusHistory: closedHistory(daysAgo(21)),
   },
@@ -846,7 +1074,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(5),
     updatedAt: daysAgo(4),
     comments: [
-      { user: AGENT_ID, message: "Reproduced. The S3 upload URL is being generated correctly, but the profile `avatarUrl` field is not being updated in the database after upload. Fixing.", createdAt: daysAgo(4) },
+      {
+        user: AGENT_ID,
+        message:
+          "Reproduced. The S3 upload URL is being generated correctly, but the profile `avatarUrl` field is not being updated in the database after upload. Fixing.",
+        createdAt: daysAgo(4),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(5)),
   },
@@ -880,7 +1113,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(10),
     updatedAt: daysAgo(8),
     comments: [
-      { user: AGENT_ID, message: "Bug found: invitation token TTL was set to 3600 seconds (1 hour) rather than 604800 seconds (7 days) in the config. Fixed and re-sent the invitation.", createdAt: daysAgo(9) },
+      {
+        user: AGENT_ID,
+        message:
+          "Bug found: invitation token TTL was set to 3600 seconds (1 hour) rather than 604800 seconds (7 days) in the config. Fixed and re-sent the invitation.",
+        createdAt: daysAgo(9),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(10)),
   },
@@ -914,7 +1152,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(1),
     updatedAt: daysAgo(1),
     comments: [
-      { user: ADMIN_ID, message: "Raised with the auth team. The `+` in the email is likely not being URL-encoded before the OAuth redirect. Investigating.", createdAt: daysAgo(1) },
+      {
+        user: ADMIN_ID,
+        message:
+          "Raised with the auth team. The `+` in the email is likely not being URL-encoded before the OAuth redirect. Investigating.",
+        createdAt: daysAgo(1),
+      },
     ],
     statusHistory: openHistory(daysAgo(1)),
   },
@@ -934,7 +1177,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(14),
     updatedAt: daysAgo(12),
     comments: [
-      { user: AGENT_ID, message: "Updating the authentication section in the Docusaurus site. Will also add a migration guide for developers coming from the API key system.", createdAt: daysAgo(13) },
+      {
+        user: AGENT_ID,
+        message:
+          "Updating the authentication section in the Docusaurus site. Will also add a migration guide for developers coming from the API key system.",
+        createdAt: daysAgo(13),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(14)),
   },
@@ -952,7 +1200,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(26),
     updatedAt: daysAgo(23),
     comments: [
-      { user: AGENT_ID, message: "Added a 'Create your first ticket' step between the Dashboard and Settings steps. Tutorial flow updated.", createdAt: daysAgo(25) },
+      {
+        user: AGENT_ID,
+        message:
+          "Added a 'Create your first ticket' step between the Dashboard and Settings steps. Tutorial flow updated.",
+        createdAt: daysAgo(25),
+      },
     ],
     statusHistory: resolvedHistory(daysAgo(26)),
   },
@@ -970,7 +1223,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(8),
     updatedAt: daysAgo(8),
     comments: [
-      { user: ADMIN_ID, message: "Will remap to `Ctrl+K` (command palette style) to avoid conflicts. Update pending design review.", createdAt: daysAgo(7) },
+      {
+        user: ADMIN_ID,
+        message:
+          "Will remap to `Ctrl+K` (command palette style) to avoid conflicts. Update pending design review.",
+        createdAt: daysAgo(7),
+      },
     ],
     statusHistory: openHistory(daysAgo(8)),
   },
@@ -1004,7 +1262,12 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(9),
     updatedAt: daysAgo(7),
     comments: [
-      { user: AGENT_ID, message: "Adding distinct icons to each badge (circle for Open, clock for In Progress, checkmark for Resolved, lock for Closed) so they are distinguishable beyond color alone.", createdAt: daysAgo(8) },
+      {
+        user: AGENT_ID,
+        message:
+          "Adding distinct icons to each badge (circle for Open, clock for In Progress, checkmark for Resolved, lock for Closed) so they are distinguishable beyond color alone.",
+        createdAt: daysAgo(8),
+      },
     ],
     statusHistory: inProgressHistory(daysAgo(9)),
   },
@@ -1038,8 +1301,17 @@ export const SEED_TICKETS: SeedTicket[] = [
     createdAt: daysAgo(60),
     updatedAt: daysAgo(55),
     comments: [
-      { user: ADMIN_ID, message: "We have launched a status page at status.qtechy.dev. Subscribers will receive email and SMS alerts for any incidents.", createdAt: daysAgo(58) },
-      { user: USER_ID, message: "Subscribed! This is exactly what we needed.", createdAt: daysAgo(55) },
+      {
+        user: ADMIN_ID,
+        message:
+          "We have launched a status page at status.qtechy.dev. Subscribers will receive email and SMS alerts for any incidents.",
+        createdAt: daysAgo(58),
+      },
+      {
+        user: USER_ID,
+        message: "Subscribed! This is exactly what we needed.",
+        createdAt: daysAgo(55),
+      },
     ],
     statusHistory: closedHistory(daysAgo(60)),
   },

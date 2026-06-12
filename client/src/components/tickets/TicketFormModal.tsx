@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { extractApiError } from '../../api/utils';
 import { TicketCategory, TicketPriority } from '../../constants/enums';
 import { useRoles } from '../../hooks/useRoles';
-import { useGetUsersQuery } from '../../store/slices/authApi';
+import { useGetUsersQuery } from '../../store/slices/userApi';
 import {
   useCreateTicketMutation,
   useUpdateTicketMutation,

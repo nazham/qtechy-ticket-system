@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import {
   Archive,
   CheckCircle2,
@@ -42,6 +43,46 @@ export default function DashboardPage() {
     error,
   } = useGetTicketStatisticsQuery();
   const loading = isLoading || isFetching;
+
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+
+  const totalTickets = useMemo(() => {
+    if (!statsData?.categoryDistribution) return 0;
+    return Object.values(statsData.categoryDistribution).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+  }, [statsData?.categoryDistribution]);
+
+  const categoryData = useMemo(() => {
+    if (!statsData?.categoryDistribution) return [];
+    const entries = Object.entries(statsData.categoryDistribution).filter(
+      ([, count]) => count > 0
+    );
+    const total = entries.reduce((sum, [, count]) => sum + count, 0);
+    let accumulatedPercent = 0;
+    return entries.map(([category, count], index) => {
+      const percentage = total > 0 ? (count / total) * 100 : 0;
+      const offset = accumulatedPercent;
+      accumulatedPercent += percentage;
+
+      let color = '#64748b';
+      if (category === 'Bug') color = '#ef4444';
+      else if (category === 'Feature Request') color = '#6366f1';
+      else if (category === 'Technical Issue') color = '#f59e0b';
+      else if (category === 'Payment Issue') color = '#10b981';
+      else if (category === 'Account Issue') color = '#8b5cf6';
+
+      return {
+        category,
+        count,
+        percentage,
+        offset,
+        color,
+        index,
+      };
+    });
+  }, [statsData?.categoryDistribution]);
 
   if (error) {
     const errorMessage = extractApiError(
@@ -240,9 +281,9 @@ export default function DashboardPage() {
 
       {/* Admin specific widgets */}
       {canManageUsers && (
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
           {/* Triage Backlog & Urgent Escalations Cards */}
-          <div className="flex flex-col gap-6 lg:col-span-1">
+          <div className="flex flex-col gap-6 lg:col-span-2">
             {/* Triage Backlog Card */}
             <div className="group flex flex-1 flex-col justify-center rounded-premium-card border border-neutral-border bg-neutral-card p-6 shadow-premium-card transition-all duration-300 hover:border-brand-accent/20 hover:shadow-md">
               <div className="flex items-center gap-4">
@@ -325,20 +366,29 @@ export default function DashboardPage() {
           </div>
 
           {/* Ticket Distribution by Category */}
-          <div className="flex flex-col rounded-premium-card border border-neutral-border bg-neutral-card p-6 shadow-premium-card lg:col-span-2">
+          <div className="flex flex-col rounded-premium-card border border-neutral-border bg-neutral-card p-6 shadow-premium-card lg:col-span-3">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-bold text-neutral-text-primary">
               <Layers size={18} className="text-brand-accent" />
               Ticket Distribution by Category
             </h3>
             <div className="flex flex-1 flex-col justify-center">
               {loading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="h-4 w-1/4 animate-pulse rounded bg-neutral-border" />
-                      <div className="h-3 w-full animate-pulse rounded bg-neutral-border" />
-                    </div>
-                  ))}
+                <div className="flex flex-col items-center justify-around gap-6 sm:flex-row">
+                  <div className="h-[200px] w-[200px] animate-pulse rounded-full bg-neutral-border" />
+                  <div className="flex w-full min-w-[200px] flex-1 flex-col gap-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between gap-4 p-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="h-3.5 w-3.5 animate-pulse rounded-full bg-neutral-border" />
+                          <div className="h-4 w-24 animate-pulse rounded bg-neutral-border" />
+                        </div>
+                        <div className="h-4 w-12 animate-pulse rounded bg-neutral-border" />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : !hasCategoryData ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
@@ -355,40 +405,115 @@ export default function DashboardPage() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {statsData?.categoryDistribution &&
-                    Object.entries(statsData.categoryDistribution)
-                      .filter(([, count]) => count > 0)
-                      .sort((a, b) => b[1] - a[1])
-                      .slice(0, 5)
-                      .map(([category, count]) => {
-                        const maxCount = Math.max(
-                          ...Object.values(
-                            statsData.categoryDistribution || {}
-                          ).filter((c) => c > 0),
-                          1
-                        );
-                        const percentage = Math.round((count / maxCount) * 100);
+                <div className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-8 md:gap-10">
+                  {/* Pie / Donut Chart */}
+                  <div className="relative flex h-[200px] w-[200px] shrink-0 items-center justify-center">
+                    <svg viewBox="0 0 42 42" className="h-full w-full">
+                      {/* Background/Base Circle */}
+                      <circle
+                        cx="21"
+                        cy="21"
+                        r="15.91549430918954"
+                        fill="transparent"
+                        stroke="#f1f5f9"
+                        strokeWidth="5"
+                      />
+                      {categoryData.map((item) => {
+                        const isHovered = hoveredIndex === item.index;
                         return (
-                          <div
-                            key={category}
-                            className="group/item -mx-2 rounded-lg px-2 py-1.5 transition-colors duration-200 hover:bg-neutral-border/20"
-                          >
-                            <div className="mb-1 flex justify-between text-xs font-semibold text-neutral-text-secondary">
-                              <span>{category}</span>
-                              <span>
-                                {count} ticket{count !== 1 ? 's' : ''}
-                              </span>
-                            </div>
-                            <div className="h-2 w-full rounded-full bg-neutral-border">
-                              <div
-                                className="h-2 rounded-full bg-brand-accent transition-all duration-500 group-hover/item:bg-brand-accent-hover"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          </div>
+                          <circle
+                            key={item.category}
+                            cx="21"
+                            cy="21"
+                            r="15.91549430918954"
+                            fill="transparent"
+                            stroke={item.color}
+                            strokeWidth={isHovered ? '6.5' : '5'}
+                            strokeDasharray={`${item.percentage} ${100 - item.percentage}`}
+                            strokeDashoffset={-item.offset}
+                            transform="rotate(-90 21 21)"
+                            className="cursor-pointer transition-[stroke-width] duration-200"
+                            onMouseEnter={() => setHoveredIndex(item.index)}
+                            onMouseLeave={() => setHoveredIndex(null)}
+                          />
                         );
                       })}
+                    </svg>
+                    {/* Center Info Text */}
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center select-none">
+                      {hoveredIndex !== null && categoryData[hoveredIndex] ? (
+                        <>
+                          <span className="mb-1 max-w-[120px] truncate text-[10px] leading-none font-bold tracking-wider text-neutral-text-muted uppercase">
+                            {categoryData[hoveredIndex].category}
+                          </span>
+                          <span className="text-2xl leading-none font-extrabold text-neutral-text-primary">
+                            {categoryData[hoveredIndex].count}
+                          </span>
+                          <span className="mt-1 text-[10px] leading-none font-semibold text-neutral-text-secondary">
+                            {categoryData[hoveredIndex].percentage.toFixed(0)}%
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="mb-1.5 text-[10px] leading-none font-bold tracking-wider text-neutral-text-muted uppercase">
+                            Total
+                          </span>
+                          <span className="text-3xl font-extrabold text-neutral-text-primary">
+                            {totalTickets}
+                          </span>
+                          <span className="mt-1.5 text-[10px] leading-none font-semibold text-neutral-text-secondary">
+                            Tickets
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="flex w-[240px] shrink-0 flex-col gap-1.5">
+                    {categoryData.map((item) => {
+                      const isHovered = hoveredIndex === item.index;
+                      return (
+                        <div
+                          key={item.category}
+                          onMouseEnter={() => setHoveredIndex(item.index)}
+                          onMouseLeave={() => setHoveredIndex(null)}
+                          className={`flex cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 transition-all duration-200 ${
+                            isHovered
+                              ? 'translate-x-1 bg-neutral-border/25'
+                              : 'hover:bg-neutral-border/10'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="h-3 w-3 shrink-0 rounded-full transition-transform duration-200"
+                              style={{
+                                backgroundColor: item.color,
+                                transform: isHovered ? 'scale(1.2)' : 'none',
+                              }}
+                            />
+                            <span
+                              className={`text-xs font-semibold transition-colors duration-200 ${
+                                isHovered
+                                  ? 'text-brand-accent'
+                                  : 'text-neutral-text-secondary'
+                              }`}
+                            >
+                              {item.category}
+                            </span>
+                          </div>
+                          <div className="flex items-baseline gap-1 text-right">
+                            <span className="text-xs font-bold text-neutral-text-primary">
+                              {item.count}
+                            </span>
+                            <span className="text-[10px] text-neutral-text-muted">
+                              ({item.percentage.toFixed(0)}%)
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

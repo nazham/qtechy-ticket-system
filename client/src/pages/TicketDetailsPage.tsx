@@ -22,7 +22,7 @@ import TicketHistoryTimeline from '../components/tickets/TicketHistoryTimeline';
 import { TicketPriority, TicketStatus } from '../constants/enums';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useRoles } from '../hooks/useRoles';
-import { useGetUsersQuery } from '../store/slices/authApi';
+import { useGetUsersQuery } from '../store/slices/userApi';
 import {
   useAssignTicketMutation,
   useDeleteTicketMutation,

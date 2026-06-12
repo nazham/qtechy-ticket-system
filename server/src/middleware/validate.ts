@@ -36,3 +36,9 @@ export const validate = validateRequest("body");
  * Usage: router.get("/route", validateQuery(mySchema), handler)
  */
 export const validateQuery = validateRequest("query");
+
+/**
+ * Generic Zod validation middleware factory for req.params.
+ * Usage: router.get("/route/:id", validateParams(mySchema), handler)
+ */
+export const validateParams = validateRequest("params");

@@ -14,7 +14,7 @@ export interface LoginResponse {
   token: string;
 }
 
-interface ApiUserData {
+export interface ApiUserData {
   _id: string;
   name: string;
   email: string;
@@ -34,13 +34,7 @@ interface ApiMeResponse {
   data: ApiUserData;
 }
 
-interface ApiGetUsersResponse {
-  success: boolean;
-  count: number;
-  data: ApiUserData[];
-}
-
-const normalizeUser = (data: ApiUserData): User => {
+export const normalizeUser = (data: ApiUserData): User => {
   const normalizedRole = data.role.toLowerCase() as User['role'];
   if (!VALID_ROLES.includes(normalizedRole)) {
     throw new Error(`Unknown role received: ${data.role}`);
@@ -113,25 +107,8 @@ export const authApi = apiSlice.injectEndpoints({
         }
       },
     }),
-
-    getUsers: build.query<User[], { role?: string } | void>({
-      query: (params) => {
-        if (params && typeof params === 'object' && params.role) {
-          const query = new URLSearchParams({ role: params.role });
-          return `/users?${query.toString()}`;
-        }
-        return '/users';
-      },
-      transformResponse: (response: ApiGetUsersResponse): User[] =>
-        response.data.map(normalizeUser),
-      providesTags: ['User'],
-    }),
   }),
 });
 
-export const {
-  useLoginMutation,
-  useRegisterUserMutation,
-  useGetMeQuery,
-  useGetUsersQuery,
-} = authApi;
+export const { useLoginMutation, useRegisterUserMutation, useGetMeQuery } =
+  authApi;

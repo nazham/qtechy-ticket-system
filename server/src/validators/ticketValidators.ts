@@ -1,5 +1,6 @@
 import z from "zod";
 import { TicketCategory, TicketPriority, TicketStatus } from "../constants/enums";
+import { objectIdString } from "./shared";
 
 export const createTicketSchema = z.object({
   title: z
@@ -14,11 +15,7 @@ export const createTicketSchema = z.object({
   priority: z.enum(TicketPriority, {
     message: "Invalid ticket priority",
   }),
-  assignedTo: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, "Invalid assignedTo ID format")
-    .optional()
-    .nullable(),
+  assignedTo: objectIdString.optional().nullable(),
 });
 
 export const updateTicketStatusSchema = z.object({
@@ -28,10 +25,7 @@ export const updateTicketStatusSchema = z.object({
 });
 
 export const assignTicketSchema = z.object({
-  assignedTo: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, "Invalid assignedTo ID format")
-    .nullable(),
+  assignedTo: objectIdString.nullable(),
 });
 
 export const addCommentSchema = z.object({
@@ -50,17 +44,17 @@ export const updateTicketSchema = z.object({
     .max(100, "Title is too long")
     .optional(),
   description: z.string().trim().min(10, "Description must be at least 10 characters").optional(),
-  category: z.enum(TicketCategory, {
-    message: "Invalid ticket category",
-  }).optional(),
-  priority: z.enum(TicketPriority, {
-    message: "Invalid ticket priority",
-  }).optional(),
-  assignedTo: z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/, "Invalid assignedTo ID format")
-    .optional()
-    .nullable(),
+  category: z
+    .enum(TicketCategory, {
+      message: "Invalid ticket category",
+    })
+    .optional(),
+  priority: z
+    .enum(TicketPriority, {
+      message: "Invalid ticket priority",
+    })
+    .optional(),
+  assignedTo: objectIdString.optional().nullable(),
 });
 
 export type CreateTicketInput = z.infer<typeof createTicketSchema>;

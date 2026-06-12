@@ -42,7 +42,8 @@ export const getTickets = async (
   next: NextFunction,
 ): Promise<void> => {
   try {
-    const { searchTerm, status, priority, category, sortBy, sortOrder, page, limit } = req.query as GetTicketsQueryInput;
+    const { searchTerm, status, priority, category, sortBy, sortOrder, page, limit } =
+      req.query as GetTicketsQueryInput;
 
     const { tickets, pagination } = await getTicketsService(
       req.user!._id.toString(),

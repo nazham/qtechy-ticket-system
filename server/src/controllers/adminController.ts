@@ -9,7 +9,7 @@ import { seedDatabase, sweepDatabase } from "../services/adminService";
 export const seedDb = async (
   _req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const result = await seedDatabase();
@@ -30,7 +30,7 @@ export const seedDb = async (
 export const sweepDb = async (
   _req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const result = await sweepDatabase();

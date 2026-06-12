@@ -388,7 +388,7 @@ export default function TicketTable({
                 {showAssignedColumn && (
                   <td className="hidden px-3 py-2 whitespace-nowrap md:table-cell">
                     {typeof ticket.assignedTo === 'object' &&
-                      ticket.assignedTo ? (
+                    ticket.assignedTo ? (
                       <div className="flex items-center gap-1.5">
                         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-indigo-100 bg-indigo-50 text-[10px] font-bold text-indigo-600">
                           {ticket.assignedTo.name.charAt(0).toUpperCase()}
@@ -539,10 +539,11 @@ export default function TicketTable({
                       onClick={() =>
                         handlePageChange(pageNum, pagination.pages)
                       }
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${pagination.page === pageNum
+                      className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-xs font-medium transition-colors ${
+                        pagination.page === pageNum
                           ? 'bg-brand-accent text-white'
                           : 'text-neutral-text-secondary hover:bg-neutral-bg hover:text-neutral-text-primary'
-                        }`}
+                      }`}
                     >
                       {pageNum}
                     </button>

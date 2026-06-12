@@ -14,7 +14,7 @@ export const seedDatabase = async () => {
     SEED_USERS.map(async (u) => ({
       ...u,
       password: await bcrypt.hash(u.password, 10),
-    }))
+    })),
   );
   await User.insertMany(hashedUsers);
 

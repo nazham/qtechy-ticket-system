@@ -262,13 +262,21 @@ export const ticketApi = apiSlice.injectEndpoints({
         );
 
         try {
-          await queryFulfilled;
+          const { data: updatedTicket } = await queryFulfilled;
+          dispatch(
+            ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+              Object.assign(draft, updatedTicket);
+            })
+          );
         } catch {
           patchTicket.undo();
           listPatches.forEach((p) => p.undo());
         }
       },
-      invalidatesTags: [{ type: 'Ticket', id: 'STATISTICS' }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Ticket', id: 'STATISTICS' },
+        { type: 'Ticket', id },
+      ],
     }),
 
     assignTicket: build.mutation<Ticket, AssignTicketPayload>({
@@ -299,13 +307,21 @@ export const ticketApi = apiSlice.injectEndpoints({
         );
 
         try {
-          await queryFulfilled;
+          const { data: updatedTicket } = await queryFulfilled;
+          dispatch(
+            ticketApi.util.updateQueryData('getTicket', id, (draft) => {
+              Object.assign(draft, updatedTicket);
+            })
+          );
         } catch {
           patchTicket.undo();
           listPatches.forEach((p) => p.undo());
         }
       },
-      invalidatesTags: [{ type: 'Ticket', id: 'STATISTICS' }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: 'Ticket', id: 'STATISTICS' },
+        { type: 'Ticket', id },
+      ],
     }),
 
     addComment: build.mutation<Ticket, AddCommentPayload>({

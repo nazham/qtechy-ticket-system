@@ -32,6 +32,16 @@ const generateTicketNumber = (): string => {
   return `TKT-${randomStr}`;
 };
 
+export const validateTicketAssignee = async (assigneeId: string): Promise<void> => {
+  const user = await User.findById(assigneeId);
+  if (!user) {
+    throw new AppError("Assigned user not found", 404);
+  }
+  if (user.role !== UserRole.Agent) {
+    throw new AppError("Tickets can only be assigned to Agents", 400);
+  }
+};
+
 export const createTicketService = async (
   userId: string,
   ticketData: {
@@ -45,13 +55,7 @@ export const createTicketService = async (
   const ticketNumber = generateTicketNumber();
 
   if (ticketData.assignedTo) {
-    const assignee = await User.findById(ticketData.assignedTo);
-    if (!assignee) {
-      throw new AppError("Assignee user not found", 404);
-    }
-    if (assignee.role !== UserRole.Agent) {
-      throw new AppError("Only Agent users can be assigned to a ticket", 400);
-    }
+    await validateTicketAssignee(ticketData.assignedTo);
   }
 
   const newTicket = await Ticket.create({
@@ -95,7 +99,7 @@ export const getTicketsService = async (
 
   const filters: any = {};
   if (options?.searchTerm) {
-    const escapedSearchTerm = options.searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedSearchTerm = options.searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     filters.$or = [
       { title: mongoose.trusted({ $regex: escapedSearchTerm, $options: "i" }) },
       { ticketNumber: mongoose.trusted({ $regex: escapedSearchTerm, $options: "i" }) },
@@ -119,7 +123,7 @@ export const getTicketsService = async (
   if (Object.keys(filters).length > 0) {
     andClauses.push(filters);
   }
-  
+
   if (andClauses.length > 0) {
     query.$and = andClauses;
   }
@@ -143,16 +147,16 @@ export const getTicketsService = async (
                 { case: { $eq: ["$priority", "Urgent"] }, then: 4 },
                 { case: { $eq: ["$priority", "High"] }, then: 3 },
                 { case: { $eq: ["$priority", "Medium"] }, then: 2 },
-                { case: { $eq: ["$priority", "Low"] }, then: 1 }
+                { case: { $eq: ["$priority", "Low"] }, then: 1 },
               ],
-              default: 0
-            }
-          }
-        }
+              default: 0,
+            },
+          },
+        },
       },
       { $sort: { priorityOrder: order, createdAt: -1 } },
       { $skip: skip },
-      { $limit: limit }
+      { $limit: limit },
     ]);
     tickets = await Ticket.populate(rawTickets, [
       { path: "createdBy", select: "name email" },
@@ -214,16 +218,7 @@ export const getTicketByIdService = async (
 
 export const assignTicketService = async (ticketId: string, assignToUserId: string | null) => {
   if (assignToUserId) {
-    // Verify that the assigned user exists
-    const userExists = await User.exists({ _id: assignToUserId });
-    if (!userExists) {
-      throw new AppError("Assigned user not found", 404);
-    }
-    // Verify that the user has the Agent role
-    const isAgent = await User.exists({ _id: assignToUserId, role: UserRole.Agent });
-    if (!isAgent) {
-      throw new AppError("Tickets can only be assigned to Agents", 400);
-    }
+    await validateTicketAssignee(assignToUserId);
   }
 
   const ticket = await Ticket.findByIdAndUpdate(
@@ -306,13 +301,14 @@ export const addCommentService = async (
 };
 
 const mapRecentTickets = (tickets: ITicket[]) => {
-  return tickets.map(t => {
+  return tickets.map((t) => {
     let lastActivity = "Ticket created";
     let lastTime = t.createdAt.getTime();
 
     if (t.statusHistory && t.statusHistory.length > 0) {
-      const latestStatus = t.statusHistory.reduce((prev: IStatusHistory, current: IStatusHistory) => 
-        (prev.changedAt.getTime() > current.changedAt.getTime()) ? prev : current
+      const latestStatus = t.statusHistory.reduce(
+        (prev: IStatusHistory, current: IStatusHistory) =>
+          prev.changedAt.getTime() > current.changedAt.getTime() ? prev : current,
       );
       if (latestStatus.changedAt.getTime() > lastTime) {
         lastActivity = `Status updated to ${latestStatus.status}`;
@@ -321,8 +317,8 @@ const mapRecentTickets = (tickets: ITicket[]) => {
     }
 
     if (t.comments && t.comments.length > 0) {
-      const latestComment = t.comments.reduce((prev: IComment, current: IComment) => 
-        (prev.createdAt.getTime() > current.createdAt.getTime()) ? prev : current
+      const latestComment = t.comments.reduce((prev: IComment, current: IComment) =>
+        prev.createdAt.getTime() > current.createdAt.getTime() ? prev : current,
       );
       if (latestComment.createdAt.getTime() > lastTime) {
         lastActivity = "New comment added";
@@ -341,16 +337,13 @@ const mapRecentTickets = (tickets: ITicket[]) => {
   });
 };
 
-export const getTicketStatisticsService = async (
-  userId: string,
-  userRole: UserRole,
-) => {
+export const getTicketStatisticsService = async (userId: string, userRole: UserRole) => {
   const query = getBaseRbacQuery(userId, userRole);
 
   // Common: status counts
   const statusCounts = await Ticket.aggregate([
     { $match: query },
-    { $group: { _id: "$status", count: { $sum: 1 } } }
+    { $group: { _id: "$status", count: { $sum: 1 } } },
   ]);
 
   const stats = {
@@ -360,7 +353,7 @@ export const getTicketStatisticsService = async (
     closed: 0,
   };
 
-  statusCounts.forEach(item => {
+  statusCounts.forEach((item) => {
     switch (item._id) {
       case TicketStatus.Open:
         stats.open = item.count;
@@ -388,7 +381,7 @@ export const getTicketStatisticsService = async (
   if (userPermissions.includes(Permission.ManageUsers)) {
     // Admin metrics (run concurrently for best performance)
     const [usersCount, backlogCount, catCounts, escalationsCount] = await Promise.all([
-      User.countDocuments({ role: { $in: [UserRole.User, UserRole.Agent] } }),
+      User.countDocuments({}),
       Ticket.countDocuments({
         assignedTo: null,
         status: { $in: [TicketStatus.Open, TicketStatus.InProgress] },
@@ -413,7 +406,7 @@ export const getTicketStatisticsService = async (
       [TicketCategory.Other]: 0,
     };
 
-    catCounts.forEach(item => {
+    catCounts.forEach((item) => {
       if (item._id && categoryDistribution) {
         categoryDistribution[item._id] = item.count;
       }
@@ -427,9 +420,7 @@ export const getTicketStatisticsService = async (
         priority: { $in: [TicketPriority.High, TicketPriority.Urgent] },
         status: { $in: [TicketStatus.Open, TicketStatus.InProgress] },
       }),
-      Ticket.find({ assignedTo: agentObjectId })
-        .sort({ updatedAt: -1 })
-        .limit(5),
+      Ticket.find({ assignedTo: agentObjectId }).sort({ updatedAt: -1 }).limit(5),
     ]);
 
     urgentFocus = focusCount;
@@ -482,7 +473,12 @@ export const updateTicketService = async (
   if (updateData.category !== undefined) ticket.category = updateData.category;
   if (updateData.priority !== undefined) ticket.priority = updateData.priority;
   if (updateData.assignedTo !== undefined) {
-    ticket.assignedTo = updateData.assignedTo ? new Types.ObjectId(updateData.assignedTo) as any : null;
+    if (updateData.assignedTo) {
+      await validateTicketAssignee(updateData.assignedTo);
+      ticket.assignedTo = new Types.ObjectId(updateData.assignedTo) as any;
+    } else {
+      ticket.assignedTo = null;
+    }
   }
 
   await ticket.save();
@@ -494,10 +490,7 @@ export const updateTicketService = async (
     .populate("statusHistory.changedBy", "name");
 };
 
-export const deleteTicketService = async (
-  ticketId: string,
-  userRole: UserRole,
-) => {
+export const deleteTicketService = async (ticketId: string, userRole: UserRole) => {
   const userPermissions = ROLE_PERMISSIONS[userRole] || [];
   if (!userPermissions.includes(Permission.DeleteTicket)) {
     throw new AppError("Only admins are authorized to delete tickets", 403);
